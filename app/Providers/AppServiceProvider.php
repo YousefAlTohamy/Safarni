@@ -4,19 +4,22 @@ namespace App\Providers;
 
 use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\RoleMiddleware;
-use App\Interfaces\Repositories\OtpRepositoryInterface;
-use App\Interfaces\Repositories\UserRepositoryInterface;
 use App\Interfaces\Repositories\CategoryRepositoryInterface;
+use App\Interfaces\Repositories\OtpRepositoryInterface;
 use App\Interfaces\Repositories\TourRepositoryInterface;
-use App\Repositories\OtpRepository;
-use App\Repositories\UserRepository;
+use App\Interfaces\Repositories\UserRepositoryInterface;
 use App\Repositories\CategoryRepository;
+use App\Repositories\OtpRepository;
 use App\Repositories\TourRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +56,16 @@ class AppServiceProvider extends ServiceProvider
                         'message' => "Please wait {$throttleSeconds} seconds before requesting a new OTP.",
                     ], 429);
                 });
+        });
+
+        Mail::extend('brevo', function () {
+            return (new BrevoTransportFactory)->create(
+                new Dsn(
+                    'brevo+api',
+                    'default',
+                    config('services.brevo.key')
+                )
+            );
         });
     }
 }
