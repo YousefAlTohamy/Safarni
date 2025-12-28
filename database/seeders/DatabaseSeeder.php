@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
                 'location' => 'Cairo, Egypt',
                 'is_verified' => true,
                 'is_admin' => true,
+                'role' => 'admin',
                 'status' => 'active',
                 'email_verified_at' => now(),
             ]
@@ -40,6 +41,7 @@ class DatabaseSeeder extends Seeder
                 'location' => 'Alexandria, Egypt',
                 'is_verified' => true,
                 'is_admin' => false,
+                'role' => 'user',
                 'status' => 'active',
                 'email_verified_at' => now(),
             ]
