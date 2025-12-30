@@ -11,6 +11,7 @@ enum OtpType: string
 {
     case VERIFICATION = 'verification';
     case PASSWORD_RESET = 'password_reset';
+    case REACTIVATION = 'reactive';
 
     /**
      * Get the email subject for this OTP type.
@@ -20,6 +21,7 @@ enum OtpType: string
         return match ($this) {
             self::VERIFICATION => 'Account Verification Code',
             self::PASSWORD_RESET => 'Password Reset Code',
+            self::REACTIVATION => 'Account Reactivation Code',
         };
     }
 }

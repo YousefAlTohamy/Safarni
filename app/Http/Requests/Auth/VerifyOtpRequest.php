@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\OtpType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class VerifyOtpRequest extends FormRequest
 {
@@ -26,6 +28,7 @@ class VerifyOtpRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'code' => ['required', 'string', 'size:4', 'regex:/^[0-9]+$/'],
+            'type' => ['sometimes', 'string', Rule::in(array_column(OtpType::cases(), 'value'))],
         ];
     }
 

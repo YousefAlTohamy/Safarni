@@ -52,7 +52,7 @@ class AuthService
     /**
      * Verify user's email with OTP.
      */
-    public function verifyOtp(string $email, string $code): array
+    public function verifyOtp(string $email, string $code, ?string $type = null): array
     {
         $user = $this->userRepository->findByEmail($email);
 
@@ -63,6 +63,39 @@ class AuthService
             ];
         }
 
+        $otpType = $type ? OtpType::tryFrom($type) : OtpType::VERIFICATION;
+        if (!$otpType) {
+            $otpType = OtpType::VERIFICATION;
+        }
+
+        // Handle Reactivation
+        if ($otpType === OtpType::REACTIVATION) {
+             if ($user->status !== 'inactive') {
+                return [
+                    'success' => false,
+                    'message' => 'Account is already active.',
+                ];
+            }
+
+            $verified = $this->otpService->verify($email, $code, OtpType::REACTIVATION);
+
+            if (!$verified) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid or expired activation code.',
+                ];
+            }
+
+            // Reactivate user
+            $this->userRepository->update($user->id, ['status' => 'active']);
+
+            return [
+                'success' => true,
+                'message' => 'Account reactivated successfully. You can now login.',
+            ];
+        }
+
+        // Standard Verification
         if ($user->is_verified) {
             return [
                 'success' => false,

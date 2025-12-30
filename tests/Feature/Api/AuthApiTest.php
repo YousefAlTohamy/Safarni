@@ -236,19 +236,19 @@ class AuthApiTest extends TestCase
     public function test_user_can_verify_email_with_valid_otp(): void
     {
         $user = User::factory()->create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'is_verified' => false,
         ]);
 
         Otp::create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
             'type' => OtpType::VERIFICATION->value,
             'expires_at' => now()->addMinutes(10),
         ]);
 
         $response = $this->postJson('/api/auth/verify', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
         ]);
 
@@ -259,7 +259,7 @@ class AuthApiTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'is_verified' => true,
         ]);
     }
@@ -267,19 +267,19 @@ class AuthApiTest extends TestCase
     public function test_verification_fails_with_invalid_otp(): void
     {
         $user = User::factory()->create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'is_verified' => false,
         ]);
 
         Otp::create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
             'type' => OtpType::VERIFICATION->value,
             'expires_at' => now()->addMinutes(10),
         ]);
 
         $response = $this->postJson('/api/auth/verify', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '9999',
         ]);
 
@@ -292,19 +292,19 @@ class AuthApiTest extends TestCase
     public function test_verification_fails_with_expired_otp(): void
     {
         $user = User::factory()->create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'is_verified' => false,
         ]);
 
         Otp::create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
             'type' => OtpType::VERIFICATION->value,
             'expires_at' => now()->subMinutes(1), // Expired
         ]);
 
         $response = $this->postJson('/api/auth/verify', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
         ]);
 
@@ -317,12 +317,12 @@ class AuthApiTest extends TestCase
     public function test_otp_is_single_use(): void
     {
         $user = User::factory()->create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'is_verified' => false,
         ]);
 
         Otp::create([
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
             'type' => OtpType::VERIFICATION->value,
             'expires_at' => now()->addMinutes(10),
@@ -330,7 +330,7 @@ class AuthApiTest extends TestCase
 
         // First verification should succeed
         $response = $this->postJson('/api/auth/verify', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
         ]);
 
@@ -341,7 +341,7 @@ class AuthApiTest extends TestCase
 
         // Second attempt with same OTP should fail
         $response = $this->postJson('/api/auth/verify', [
-            'email' => 'verify@example.com',
+            'email' => 'verify@gmail.com',
             'code' => '1234',
         ]);
 
@@ -710,6 +710,7 @@ class AuthApiTest extends TestCase
     public function test_user_can_deactivate_account(): void
     {
         $user = User::factory()->create([
+            'password' => Hash::make('password'),
             'is_verified' => true,
             'status' => 'active',
             'role' => UserRole::USER->value,
@@ -717,7 +718,9 @@ class AuthApiTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->postJson('/api/profile/deactivate');
+        $response = $this->postJson('/api/profile/deactivate', [
+            'password' => 'password',
+        ]);
 
         $response->assertStatus(200)
             ->assertJson([

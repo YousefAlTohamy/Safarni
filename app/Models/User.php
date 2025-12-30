@@ -33,6 +33,7 @@ class User extends Authenticatable
         'is_admin',
         'role',
         'google_id',
+        'email_verified_at',
     ];
 
     /**
