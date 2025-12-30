@@ -110,7 +110,7 @@ class ProfileService
     public function changePassword(User $user, string $currentPassword, string $newPassword): array
     {
         // Verify current password
-        if (!Hash::check($currentPassword, $user->password)) {
+        if (! Hash::check($currentPassword, $user->password)) {
             return [
                 'success' => false,
                 'message' => 'Current password is incorrect.',
@@ -138,6 +138,12 @@ class ProfileService
     public function deactivateAccount(User $user): array
     {
         $this->userRepository->deactivate($user->id);
+
+        $user->status = 'inactive';
+        $user->save();
+        
+        // Mark email as unverified
+        $user->markEmailAsUnverified();
 
         // Revoke all tokens
         $user->tokens()->delete();
