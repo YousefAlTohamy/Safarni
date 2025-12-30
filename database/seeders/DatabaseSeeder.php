@@ -15,11 +15,11 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin User
         User::updateOrCreate(
-            ['email' => 'admin@safarni.com'],
+            ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Admin User',
-                'email' => 'admin@safarni.com',
-                'password' => Hash::make('password'),
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('Password1!'),
                 'phone' => '+201234567890',
                 'location' => 'Cairo, Egypt',
                 'is_verified' => true,
@@ -32,11 +32,11 @@ class DatabaseSeeder extends Seeder
 
         // Create Test User
         User::updateOrCreate(
-            ['email' => 'user@safarni.com'],
+            ['email' => 'user@gmail.com'],
             [
                 'name' => 'Test User',
-                'email' => 'user@safarni.com',
-                'password' => Hash::make('password'),
+                'email' => 'user@gmail.com',
+                'password' => Hash::make('Password1!'),
                 'phone' => '+201098765432',
                 'location' => 'Alexandria, Egypt',
                 'is_verified' => true,

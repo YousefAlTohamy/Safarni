@@ -35,7 +35,7 @@ class AuthApiTest extends TestCase
     {
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'test@gmail.com',
             'password' => 'Password1!',
             'password_confirmation' => 'Password1!',
         ]);
@@ -45,18 +45,18 @@ class AuthApiTest extends TestCase
                 'success' => true,
                 'data' => [
                     'name' => 'Test User',
-                    'email' => 'test@example.com',
+                    'email' => 'test@gmail.com',
                 ],
             ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'test@example.com',
+            'email' => 'test@gmail.com',
             'is_verified' => false,
         ]);
 
         // Verify OTP was created
         $this->assertDatabaseHas('otps', [
-            'email' => 'test@example.com',
+            'email' => 'test@gmail.com',
             'type' => OtpType::VERIFICATION->value,
         ]);
     }
@@ -66,7 +66,7 @@ class AuthApiTest extends TestCase
         // Password too short
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'test@gmail.com',
             'password' => 'Aa1!',
             'password_confirmation' => 'Aa1!',
         ]);
@@ -77,7 +77,7 @@ class AuthApiTest extends TestCase
         // Password missing uppercase
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
-            'email' => 'test2@example.com',
+            'email' => 'test2@gmail.com',
             'password' => 'password1!',
             'password_confirmation' => 'password1!',
         ]);
@@ -88,22 +88,137 @@ class AuthApiTest extends TestCase
         // Password missing special character
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
-            'email' => 'test3@example.com',
+            'email' => 'test3@gmail.com',
             'password' => 'Password1',
             'password_confirmation' => 'Password1',
         ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['password']);
+
+        // Password too long (>255)
+        $longPassword = str_repeat('A', 256).'1!';
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test4@gmail.com',
+            'password' => $longPassword,
+            'password_confirmation' => $longPassword,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_registration_validates_name_strict_rules(): void
+    {
+        // Name starts with space (TrimStrings middleware cleans this)
+        $response = $this->postJson('/api/auth/register', [
+            'name' => ' Test User',
+            'email' => 'test_name1@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        // Should succeed as it gets trimmed to "Test User"
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'name' => 'Test User',
+                ],
+            ]);
+
+        // Name ends with space (TrimStrings middleware cleans this)
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User ',
+            'email' => 'test_name2@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(201)
+            ->assertJson([
+                'data' => [
+                    'name' => 'Test User',
+                ],
+            ]);
+
+        // Double space between words (TrimStrings does NOT clean this)
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test  User',
+            'email' => 'test_name3@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+
+        // Special characters (not allowed)
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test@User',
+            'email' => 'test_name4@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['name']);
+
+        // Valid name
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test-User_123',
+            'email' => 'test_valid@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(201);
+    }
+
+    public function test_registration_validates_email_strict_rules(): void
+    {
+        // Uppercase letters
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'Test@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['email']);
+
+        // Non-English characters (not easy to test reliably if DB/PHP allows it, but regex should catch it)
+        // Trying a valid unicode char in email which we want to forbid
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'tést@gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_registration_validates_email_is_gmail(): void
+    {
+        // Non-Gmail email
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test@yahoo.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['email']);
+
+        // Gmail subdomain (should likely fail based on regex)
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test@sub.gmail.com',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['email']);
     }
 
     public function test_registration_fails_with_duplicate_email(): void
     {
-        User::factory()->create(['email' => 'existing@example.com']);
+        User::factory()->create(['email' => 'existing@gmail.com']);
 
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
-            'email' => 'existing@example.com',
+            'email' => 'existing@gmail.com',
             'password' => 'Password1!',
             'password_confirmation' => 'Password1!',
         ]);
@@ -242,14 +357,14 @@ class AuthApiTest extends TestCase
     public function test_verified_user_can_login(): void
     {
         $user = User::factory()->create([
-            'email' => 'login@example.com',
+            'email' => 'login@gmail.com',
             'password' => Hash::make('Password1!'),
             'is_verified' => true,
             'role' => UserRole::USER->value,
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'email' => 'login@example.com',
+            'email' => 'login@gmail.com',
             'password' => 'Password1!',
         ]);
 
@@ -273,13 +388,13 @@ class AuthApiTest extends TestCase
     public function test_unverified_user_cannot_login(): void
     {
         $user = User::factory()->create([
-            'email' => 'unverified@example.com',
+            'email' => 'unverified@gmail.com',
             'password' => Hash::make('Password1!'),
             'is_verified' => false,
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'email' => 'unverified@example.com',
+            'email' => 'unverified@gmail.com',
             'password' => 'Password1!',
         ]);
 
@@ -293,13 +408,13 @@ class AuthApiTest extends TestCase
     public function test_login_fails_with_invalid_credentials(): void
     {
         $user = User::factory()->create([
-            'email' => 'user@example.com',
+            'email' => 'user@gmail.com',
             'password' => Hash::make('Password1!'),
             'is_verified' => true,
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'email' => 'user@example.com',
+            'email' => 'user@gmail.com',
             'password' => 'WrongPassword!',
         ]);
 
@@ -317,10 +432,10 @@ class AuthApiTest extends TestCase
 
     public function test_forgot_password_sends_otp(): void
     {
-        $user = User::factory()->create(['email' => 'forgot@example.com']);
+        $user = User::factory()->create(['email' => 'forgot@gmail.com']);
 
         $response = $this->postJson('/api/auth/forgot-password', [
-            'email' => 'forgot@example.com',
+            'email' => 'forgot@gmail.com',
         ]);
 
         $response->assertStatus(200)
@@ -329,7 +444,7 @@ class AuthApiTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('otps', [
-            'email' => 'forgot@example.com',
+            'email' => 'forgot@gmail.com',
             'type' => OtpType::PASSWORD_RESET->value,
         ]);
     }
@@ -337,19 +452,19 @@ class AuthApiTest extends TestCase
     public function test_reset_password_with_valid_otp(): void
     {
         $user = User::factory()->create([
-            'email' => 'reset@example.com',
+            'email' => 'reset@gmail.com',
             'password' => Hash::make('OldPassword1!'),
         ]);
 
         Otp::create([
-            'email' => 'reset@example.com',
+            'email' => 'reset@gmail.com',
             'code' => '5678',
             'type' => OtpType::PASSWORD_RESET->value,
             'expires_at' => now()->addMinutes(10),
         ]);
 
         $response = $this->postJson('/api/auth/reset-password', [
-            'email' => 'reset@example.com',
+            'email' => 'reset@gmail.com',
             'code' => '5678',
             'password' => 'NewPassword1!',
             'password_confirmation' => 'NewPassword1!',
@@ -403,7 +518,7 @@ class AuthApiTest extends TestCase
 
         $response = $this->putJson('/api/profile', [
             'name' => 'Updated Name',
-            'phone' => '+1234567890',
+            'phone' => '01012345678', // Valid Egyptian
             'location' => 'Cairo, Egypt',
         ]);
 
@@ -412,15 +527,73 @@ class AuthApiTest extends TestCase
                 'success' => true,
                 'data' => [
                     'name' => 'Updated Name',
-                    'phone' => '+1234567890',
+                    'phone' => '01012345678',
                 ],
             ]);
+    }
+
+    public function test_profile_update_validates_phone_egyptian_rules(): void
+    {
+        $user = User::factory()->create([
+            'is_verified' => true,
+            'role' => UserRole::USER->value,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        // Invalid: Too short
+        $response = $this->putJson('/api/profile', [
+            'phone' => '0101234',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['phone']);
+
+        // Invalid: Not starting with 01
+        $response = $this->putJson('/api/profile', [
+            'phone' => '02012345678',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['phone']);
+
+        // Invalid: Characters
+        $response = $this->putJson('/api/profile', [
+            'phone' => '010123abc78',
+        ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['phone']);
+
+        // Valid: 010...
+        $response = $this->putJson('/api/profile', [
+            'phone' => '01012345678',
+        ]);
+        $response->assertStatus(200);
+
+        // Valid: 011...
+        $response = $this->putJson('/api/profile', [
+            'phone' => '01112345678',
+        ]);
+        $response->assertStatus(200);
+
+        // Valid: 012...
+        $response = $this->putJson('/api/profile', [
+            'phone' => '01212345678',
+        ]);
+        $response->assertStatus(200);
+
+        // Valid: 015...
+        $response = $this->putJson('/api/profile', [
+            'phone' => '01512345678',
+        ]);
+        $response->assertStatus(200);
+
+        // Valid: +201...
+        $response = $this->putJson('/api/profile', [
+            'phone' => '+201012345678',
+        ]);
+        $response->assertStatus(200);
     }
 
     public function test_email_change_triggers_reverification(): void
     {
         $user = User::factory()->create([
-            'email' => 'old@example.com',
+            'email' => 'old@gmail.com',
             'is_verified' => true,
             'role' => UserRole::USER->value,
         ]);
@@ -428,7 +601,7 @@ class AuthApiTest extends TestCase
         Sanctum::actingAs($user);
 
         $response = $this->putJson('/api/profile', [
-            'email' => 'new@example.com',
+            'email' => 'new@gmail.com',
         ]);
 
         $response->assertStatus(200)
@@ -439,13 +612,13 @@ class AuthApiTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
-            'email' => 'new@example.com',
+            'email' => 'new@gmail.com',
             'is_verified' => false,
         ]);
 
         // Verify OTP was created for new email
         $this->assertDatabaseHas('otps', [
-            'email' => 'new@example.com',
+            'email' => 'new@gmail.com',
             'type' => OtpType::VERIFICATION->value,
         ]);
     }
@@ -554,6 +727,7 @@ class AuthApiTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'status' => 'inactive',
+            'is_verified' => false,
         ]);
     }
 
