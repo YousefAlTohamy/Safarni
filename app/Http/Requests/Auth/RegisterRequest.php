@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -36,7 +37,8 @@ class RegisterRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
-                'unique:users,email',
+                'max:255',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
                 'regex:/^[a-z0-9._%+-]+@gmail\.com$/', // Lowercase, English chars, @gmail.com only
             ],
             'password' => [

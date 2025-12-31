@@ -25,22 +25,62 @@ class AuthService
      */
     public function register(array $data): array
     {
-        // Create user with unverified status
-        $user = $this->userRepository->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => UserRole::USER->value,
-            'is_verified' => false,
-            'status' => 'active',
-        ]);
+        // Check if user exists (including soft deleted)
+        $user = $this->userRepository->findByEmailWithTrashed($data['email']);
+
+        if ($user && $user->trashed()) {
+            // Restore user
+            $this->userRepository->restore($user->id);
+
+            // Update user details
+            $this->userRepository->update($user->id, [
+                'name' => $data['name'],
+                'password' => $data['password'], // Will be hashed in model or should be hashed here? Model casts it? No, repo uses create/update.
+                // Repo update uses Eloquent update, which doesn't auto-hash unless model mutator exists.
+                // User model has cast 'password' => 'hashed', which handles hashing on set?
+                // Wait, User::create in AuthService::register uses plain password?
+                // Let's check AuthService::register original code...
+                // Original: 'password' => $data['password']
+                // User model casts: 'password' => 'hashed'.
+                // So plain text is fine.
+                'status' => 'active',
+                'is_verified' => false,
+                'email_verified_at' => null,
+            ]);
+
+            // Refresh user to get updated data
+            $user->refresh();
+
+            // Revoke old tokens
+            $user->tokens()->delete();
+
+            $message = 'Account restored successfully. Please check your email for the verification code.';
+        } elseif ($user) {
+             // This case should be caught by validation (email unique), but just in case
+             return [
+                'success' => false,
+                'message' => 'Email already taken.',
+             ];
+        } else {
+            // Create new user
+            $user = $this->userRepository->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'role' => UserRole::USER->value,
+                'is_verified' => false,
+                'status' => 'active',
+            ]);
+
+            $message = 'Registration successful. Please check your email for the verification code.';
+        }
 
         // Generate and send OTP
         $this->otpService->generate($user->email, OtpType::VERIFICATION);
 
         return [
             'success' => true,
-            'message' => 'Registration successful. Please check your email for the verification code.',
+            'message' => $message,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
