@@ -42,4 +42,14 @@ interface UserRepositoryInterface
      * Deactivate user account.
      */
     public function deactivate(int $id): bool;
+
+    /**
+     * Find user by email (including soft deleted).
+     */
+    public function findByEmailWithTrashed(string $email): ?User;
+
+    /**
+     * Restore soft deleted user.
+     */
+    public function restore(int $id): bool;
 }

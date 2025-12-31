@@ -135,13 +135,21 @@ class ProfileService
     /**
      * Deactivate user account.
      */
-    public function deactivateAccount(User $user): array
+    public function deactivateAccount(User $user, string $password): array
     {
+        // Verify password
+        if (! Hash::check($password, $user->password)) {
+            return [
+                'success' => false,
+                'message' => 'Incorrect password.',
+            ];
+        }
+
         $this->userRepository->deactivate($user->id);
 
         $user->status = 'inactive';
         $user->save();
-        
+
         // Mark email as unverified
         $user->markEmailAsUnverified();
 

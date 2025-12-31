@@ -59,7 +59,8 @@ class AuthController extends BaseApiController
     {
         $result = $this->authService->verifyOtp(
             $request->input('email'),
-            $request->input('code')
+            $request->input('code'),
+            $request->input('type')
         );
 
         if (!$result['success']) {
