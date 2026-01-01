@@ -145,6 +145,9 @@ The project follows a **Service-Repository Pattern** with clear separation of co
 | Google OAuth | ✅ Complete | Social login integration |
 | Password Reset | ✅ Complete | OTP-based password recovery flow |
 | Profile Management | ✅ Complete | View, update, deactivate, delete account |
+| Account Deactivation | ✅ Complete | Secure account deactivation with password verification |
+| Account Reactivation | ✅ Complete | OTP-based account reactivation flow |
+| Account Restoration | ✅ Complete | Automatic restoration of soft-deleted accounts on re-registration |
 
 ### Flight Booking Module
 
@@ -446,6 +449,8 @@ erDiagram
 | POST | `/api/auth/forgot-password` | Initiate password reset |
 | POST | `/api/auth/verify-reset-otp` | Verify reset OTP |
 | POST | `/api/auth/reset-password` | Complete password reset |
+| POST | `/api/auth/request-reactivation` | Request account reactivation OTP |
+| POST | `/api/auth/reactivate` | Reactivate account with OTP |
 | POST | `/api/auth/resend-otp` | Resend verification OTP |
 
 #### Airports
@@ -481,9 +486,15 @@ erDiagram
 | POST | `/api/profile/deactivate` | Deactivate account |
 | DELETE | `/api/profile` | Delete account |
 
+#### User Info (Legacy)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/user` | Get current authenticated user data |
+
 #### Seat Management
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/api/seats/{seat}` | Get specific seat details |
 | POST | `/api/seats/lock` | Lock seats temporarily |
 | DELETE | `/api/seats/{id}/release` | Release locked seat |
 
@@ -576,7 +587,7 @@ huma-volve-backend/
 │   ├── Enums/                    # PHP Enums for type safety
 │   │   ├── BookingStatus.php     # pending, confirmed, cancelled, completed
 │   │   ├── FlightStatus.php      # scheduled, delayed, cancelled, etc.
-│   │   ├── OtpType.php           # verification, password_reset
+│   │   ├── OtpType.php           # verification, password_reset, reactivation
 │   │   ├── PassengerTitle.php    # Mr, Mrs, Ms, Dr
 │   │   ├── PaymentStatus.php     # pending, completed, failed, refunded
 │   │   ├── SeatClass.php         # economy, business, first
@@ -585,6 +596,7 @@ huma-volve-backend/
 │   ├── Http/
 │   │   └── Controllers/
 │   │       └── Api/              # API Controllers
+│   │           ├── BaseApiController.php
 │   │           ├── AirlineController.php
 │   │           ├── AirportController.php
 │   │           ├── AuthController.php
@@ -615,6 +627,18 @@ huma-volve-backend/
 │   │   └── User.php
 │   │
 │   ├── Repositories/             # Data access layer
+│   │   ├── BaseRepository.php
+│   │   ├── AircraftRepository.php
+│   │   ├── AirlineRepository.php
+│   │   ├── AirportRepository.php
+│   │   ├── BookingRepository.php
+│   │   ├── CategoryRepository.php
+│   │   ├── FlightRepository.php
+│   │   ├── OtpRepository.php
+│   │   ├── PassengerRepository.php
+│   │   ├── SeatRepository.php
+│   │   ├── TourRepository.php
+│   │   └── UserRepository.php
 │   │
 │   └── Services/                 # Business logic layer
 │       ├── AirlineService.php
@@ -632,6 +656,13 @@ huma-volve-backend/
 │   ├── factories/                # Model factories for testing
 │   ├── migrations/               # Database schema
 │   └── seeders/                  # Sample data seeders
+│       ├── DatabaseSeeder.php
+│       ├── AircraftSeeder.php
+│       ├── AirlineSeeder.php
+│       ├── AirportSeeder.php
+│       ├── CategorySeeder.php
+│       ├── FlightSeeder.php
+│       └── TourSeeder.php
 │
 ├── routes/
 │   └── api.php                   # API route definitions
@@ -639,6 +670,8 @@ huma-volve-backend/
 ├── tests/
 │   └── Feature/
 │       └── Api/                  # API feature tests
+│           ├── AccountLifecycleTest.php
+│           ├── AccountRestorationTest.php
 │           ├── AirlineApiTest.php
 │           ├── AirportApiTest.php
 │           ├── AuthApiTest.php
@@ -647,8 +680,10 @@ huma-volve-backend/
 │           ├── HomeApiTest.php
 │           └── SeatApiTest.php
 │
-└── config/
-    └── otp.php                   # OTP configuration
+├── config/
+│   └── otp.php                   # OTP configuration
+│
+└── Round-8-safarni-team-1.postman_collection-version-2.json  # Postman Collection
 ```
 
 ---
@@ -731,6 +766,8 @@ The project includes comprehensive feature tests for all API endpoints:
 | Test Suite | Test Cases | Description |
 |------------|------------|-------------|
 | `AuthApiTest` | 15+ tests | Registration, login, OTP, password reset |
+| `AccountLifecycleTest` | 7+ tests | Account deactivation and reactivation flows |
+| `AccountRestorationTest` | 2+ tests | Soft-deleted account restoration on re-registration |
 | `AirportApiTest` | 10+ tests | CRUD operations, search functionality |
 | `AirlineApiTest` | 10+ tests | CRUD operations, code lookup |
 | `FlightApiTest` | 12+ tests | Search, filtering, comparison |
