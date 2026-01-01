@@ -37,6 +37,8 @@ class UpdateProfileRequest extends FormRequest
             ],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'location' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'profile_image' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }
