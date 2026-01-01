@@ -325,6 +325,14 @@ class AuthService
             ];
         }
 
+        // Check if new password is same as old password
+        if (Hash::check($password, $user->password)) {
+            return [
+                'success' => false,
+                'message' => 'New password cannot be the same as the old password.',
+            ];
+        }
+
         // Update password
         $this->userRepository->update($user->id, [
             'password' => Hash::make($password),
