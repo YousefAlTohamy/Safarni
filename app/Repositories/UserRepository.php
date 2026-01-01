@@ -76,4 +76,26 @@ class UserRepository implements UserRepositoryInterface
     {
         return $this->update($id, ['status' => 'inactive']);
     }
+
+    /**
+     * Find user by email (including soft deleted).
+     */
+    public function findByEmailWithTrashed(string $email): ?User
+    {
+        return User::withTrashed()->where('email', $email)->first();
+    }
+
+    /**
+     * Restore soft deleted user.
+     */
+    public function restore(int $id): bool
+    {
+        $user = User::withTrashed()->find($id);
+
+        if (!$user) {
+            return false;
+        }
+
+        return $user->restore();
+    }
 }

@@ -36,6 +36,9 @@ return [
     */
 
     'mailers' => [
+        'brevo' => [
+            'transport' => 'brevo',
+        ],
 
         'smtp' => [
             'transport' => 'smtp',
@@ -109,7 +112,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@gmail.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 

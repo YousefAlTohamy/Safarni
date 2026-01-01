@@ -39,7 +39,7 @@ class ResendOtpRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.in' => 'Type must be either "verification" or "password_reset".',
+            'type.in' => 'Type must be "verification", "password_reset", or "reactive".',
         ];
     }
 }

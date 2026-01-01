@@ -25,22 +25,62 @@ class AuthService
      */
     public function register(array $data): array
     {
-        // Create user with unverified status
-        $user = $this->userRepository->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => UserRole::USER->value,
-            'is_verified' => false,
-            'status' => 'active',
-        ]);
+        // Check if user exists (including soft deleted)
+        $user = $this->userRepository->findByEmailWithTrashed($data['email']);
+
+        if ($user && $user->trashed()) {
+            // Restore user
+            $this->userRepository->restore($user->id);
+
+            // Update user details
+            $this->userRepository->update($user->id, [
+                'name' => $data['name'],
+                'password' => $data['password'], // Will be hashed in model or should be hashed here? Model casts it? No, repo uses create/update.
+                // Repo update uses Eloquent update, which doesn't auto-hash unless model mutator exists.
+                // User model has cast 'password' => 'hashed', which handles hashing on set?
+                // Wait, User::create in AuthService::register uses plain password?
+                // Let's check AuthService::register original code...
+                // Original: 'password' => $data['password']
+                // User model casts: 'password' => 'hashed'.
+                // So plain text is fine.
+                'status' => 'active',
+                'is_verified' => false,
+                'email_verified_at' => null,
+            ]);
+
+            // Refresh user to get updated data
+            $user->refresh();
+
+            // Revoke old tokens
+            $user->tokens()->delete();
+
+            $message = 'Account restored successfully. Please check your email for the verification code.';
+        } elseif ($user) {
+             // This case should be caught by validation (email unique), but just in case
+             return [
+                'success' => false,
+                'message' => 'Email already taken.',
+             ];
+        } else {
+            // Create new user
+            $user = $this->userRepository->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'role' => UserRole::USER->value,
+                'is_verified' => false,
+                'status' => 'active',
+            ]);
+
+            $message = 'Registration successful. Please check your email for the verification code.';
+        }
 
         // Generate and send OTP
         $this->otpService->generate($user->email, OtpType::VERIFICATION);
 
         return [
             'success' => true,
-            'message' => 'Registration successful. Please check your email for the verification code.',
+            'message' => $message,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -52,7 +92,7 @@ class AuthService
     /**
      * Verify user's email with OTP.
      */
-    public function verifyOtp(string $email, string $code): array
+    public function verifyOtp(string $email, string $code, ?string $type = null): array
     {
         $user = $this->userRepository->findByEmail($email);
 
@@ -63,6 +103,39 @@ class AuthService
             ];
         }
 
+        $otpType = $type ? OtpType::tryFrom($type) : OtpType::VERIFICATION;
+        if (!$otpType) {
+            $otpType = OtpType::VERIFICATION;
+        }
+
+        // Handle Reactivation
+        if ($otpType === OtpType::REACTIVATION) {
+             if ($user->status !== 'inactive') {
+                return [
+                    'success' => false,
+                    'message' => 'Account is already active.',
+                ];
+            }
+
+            $verified = $this->otpService->verify($email, $code, OtpType::REACTIVATION);
+
+            if (!$verified) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid or expired activation code.',
+                ];
+            }
+
+            // Reactivate user
+            $this->userRepository->update($user->id, ['status' => 'active']);
+
+            return [
+                'success' => true,
+                'message' => 'Account reactivated successfully. You can now login.',
+            ];
+        }
+
+        // Standard Verification
         if ($user->is_verified) {
             return [
                 'success' => false,
@@ -249,6 +322,14 @@ class AuthService
             return [
                 'success' => false,
                 'message' => 'User not found.',
+            ];
+        }
+
+        // Check if new password is same as old password
+        if (Hash::check($password, $user->password)) {
+            return [
+                'success' => false,
+                'message' => 'New password cannot be the same as the old password.',
             ];
         }
 

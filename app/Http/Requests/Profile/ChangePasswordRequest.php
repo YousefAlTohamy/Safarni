@@ -30,9 +30,10 @@ class ChangePasswordRequest extends FormRequest
                 'required',
                 'string',
                 'confirmed',
-                Password::min(6)
-                    ->mixedCase()
-                    ->symbols(),
+                'min:6',
+                'max:255',
+                'regex:/[A-Z]/',
+                'regex:/[^a-zA-Z0-9]/',
             ],
         ];
     }
@@ -46,8 +47,8 @@ class ChangePasswordRequest extends FormRequest
     {
         return [
             'password.min' => 'New password must be at least 6 characters.',
-            'password.mixed' => 'New password must contain at least 1 uppercase letter.',
-            'password.symbols' => 'New password must contain at least 1 special character.',
+            'password.max' => 'New password must not exceed 255 characters.',
+            'password.regex' => 'New password must contain at least 1 uppercase letter and 1 special character.',
         ];
     }
 }

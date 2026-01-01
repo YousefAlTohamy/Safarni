@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\PassengerController;
 use App\Http\Controllers\Api\Hotel\HotelHomepageController;
 use App\Http\Controllers\Api\Hotel\RoomController;
+use App\Http\Controllers\Api\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 
 // Health check
 Route::get('/health', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toISOString()]));
+
+// Home Page
+Route::get('/home', [HomeController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
