@@ -306,11 +306,8 @@ class AuthController extends BaseApiController
      */
     public function resendOtp(ResendOtpRequest $request): JsonResponse
     {
-        $type = OtpType::from($request->input('type'));
-
         $result = $this->authService->resendOtp(
-            $request->input('email'),
-            $type
+            $request->input('email')
         );
 
         if (!$result['success']) {

@@ -56,11 +56,11 @@ class AuthService
 
             $message = 'Account restored successfully. Please check your email for the verification code.';
         } elseif ($user) {
-             // This case should be caught by validation (email unique), but just in case
-             return [
+            // This case should be caught by validation (email unique), but just in case
+            return [
                 'success' => false,
                 'message' => 'Email already taken.',
-             ];
+            ];
         } else {
             // Create new user
             $user = $this->userRepository->create([
@@ -96,7 +96,7 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'success' => false,
                 'message' => 'User not found.',
@@ -104,13 +104,13 @@ class AuthService
         }
 
         $otpType = $type ? OtpType::tryFrom($type) : OtpType::VERIFICATION;
-        if (!$otpType) {
+        if (! $otpType) {
             $otpType = OtpType::VERIFICATION;
         }
 
         // Handle Reactivation
         if ($otpType === OtpType::REACTIVATION) {
-             if ($user->status !== 'inactive') {
+            if ($user->status !== 'inactive') {
                 return [
                     'success' => false,
                     'message' => 'Account is already active.',
@@ -119,7 +119,7 @@ class AuthService
 
             $verified = $this->otpService->verify($email, $code, OtpType::REACTIVATION);
 
-            if (!$verified) {
+            if (! $verified) {
                 return [
                     'success' => false,
                     'message' => 'Invalid or expired activation code.',
@@ -127,7 +127,11 @@ class AuthService
             }
 
             // Reactivate user
-            $this->userRepository->update($user->id, ['status' => 'active']);
+            $this->userRepository->update($user->id, [
+                'status' => 'active',
+                'is_verified' => true,
+                'email_verified_at' => now(),
+            ]);
 
             return [
                 'success' => true,
@@ -145,7 +149,7 @@ class AuthService
 
         $verified = $this->otpService->verify($email, $code, OtpType::VERIFICATION);
 
-        if (!$verified) {
+        if (! $verified) {
             return [
                 'success' => false,
                 'message' => 'Invalid or expired verification code.',
@@ -168,14 +172,14 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             return [
                 'success' => false,
                 'message' => 'Invalid credentials.',
             ];
         }
 
-        if (!$user->is_verified) {
+        if (! $user->is_verified) {
             return [
                 'success' => false,
                 'message' => 'Please verify your email before logging in.',
@@ -209,14 +213,16 @@ class AuthService
         // Check if user exists by Google ID
         $user = $this->userRepository->findByGoogleId($googleUser['id']);
 
-        if (!$user) {
+        if (! $user) {
             // Check if user exists by email
             $user = $this->userRepository->findByEmail($googleUser['email']);
 
             if ($user) {
-                // Link Google account to existing user
+                // Link Google account to existing user and force verification
                 $this->userRepository->update($user->id, [
                     'google_id' => $googleUser['id'],
+                    'is_verified' => true,
+                    'email_verified_at' => now(),
                 ]);
             } else {
                 // Create new user
@@ -231,6 +237,15 @@ class AuthService
                     'status' => 'active',
                 ]);
             }
+        }
+
+        // Ensure user is verified if they log in with Google
+        if (! $user->is_verified) {
+            $this->userRepository->update($user->id, [
+                'is_verified' => true,
+                'email_verified_at' => now(),
+            ]);
+            $user->fresh();
         }
 
         // Create token
@@ -251,7 +266,7 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             // Don't reveal if user exists for security
             return [
                 'success' => true,
@@ -275,7 +290,7 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'success' => false,
                 'message' => 'Invalid or expired reset code.',
@@ -284,7 +299,7 @@ class AuthService
 
         $verified = $this->otpService->verify($email, $code, OtpType::PASSWORD_RESET);
 
-        if (!$verified) {
+        if (! $verified) {
             return [
                 'success' => false,
                 'message' => 'Invalid or expired reset code.',
@@ -309,7 +324,7 @@ class AuthService
     {
         $cachedToken = cache()->get("password_reset_{$email}");
 
-        if (!$cachedToken || $cachedToken !== $resetToken) {
+        if (! $cachedToken || $cachedToken !== $resetToken) {
             return [
                 'success' => false,
                 'message' => 'Invalid or expired reset session.',
@@ -318,7 +333,7 @@ class AuthService
 
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'success' => false,
                 'message' => 'User not found.',
@@ -353,16 +368,27 @@ class AuthService
     /**
      * Resend OTP.
      */
-    public function resendOtp(string $email, OtpType $type): array
+    public function resendOtp(string $email): array
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             // Don't reveal if user exists
             return [
                 'success' => true,
                 'message' => 'If an account with that email exists, a new code has been sent.',
             ];
+        }
+
+        // Infer OTP Type
+        if ($user->status === 'inactive') {
+            $type = OtpType::REACTIVATION;
+        } elseif (! $user->is_verified) {
+            $type = OtpType::VERIFICATION;
+        } else {
+            // Default to password reset for verified, active users
+            // This assumes they are stuck in the forgot password flow
+            $type = OtpType::PASSWORD_RESET;
         }
 
         return $this->otpService->resend($email, $type);
