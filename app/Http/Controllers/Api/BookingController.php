@@ -29,7 +29,7 @@ class BookingController extends BaseApiController
     {
         $bookings = $this->bookingService->getUserBookings(
             auth()->id(),
-            $request->input('per_page', 15)
+            (int) $request->input('per_page', 15)
         );
 
         return BookingResource::collection($bookings);

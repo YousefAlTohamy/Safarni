@@ -37,7 +37,7 @@ class AirlineController extends BaseApiController
         }
 
         $airlines = $this->airlineService->getPaginatedAirlines(
-            $request->input('per_page', 15)
+            (int) $request->input('per_page', 15)
         );
 
         return AirlineResource::collection($airlines);
