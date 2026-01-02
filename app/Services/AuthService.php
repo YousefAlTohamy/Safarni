@@ -127,7 +127,11 @@ class AuthService
             }
 
             // Reactivate user
-            $this->userRepository->update($user->id, ['status' => 'active']);
+            $this->userRepository->update($user->id, [
+                'status' => 'active',
+                'is_verified' => true,
+                'email_verified_at' => now(),
+            ]);
 
             return [
                 'success' => true,
@@ -366,10 +370,10 @@ class AuthService
         }
 
         // Infer OTP Type
-        if (!$user->is_verified) {
-            $type = OtpType::VERIFICATION;
-        } elseif ($user->status === 'inactive') {
+        if ($user->status === 'inactive') {
             $type = OtpType::REACTIVATION;
+        } elseif (!$user->is_verified) {
+            $type = OtpType::VERIFICATION;
         } else {
             // Default to password reset for verified, active users
             // This assumes they are stuck in the forgot password flow
