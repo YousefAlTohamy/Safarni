@@ -483,6 +483,15 @@
                     "request": {
                         "method": "POST",
                         "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"password\": \"Password@123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
                         "url": {
                             "raw": "{{base_url}}/profile/deactivate",
                             "host": [
@@ -502,6 +511,15 @@
                     "request": {
                         "method": "DELETE",
                         "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"password\": \"Password@123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
                         "url": {
                             "raw": "{{base_url}}/profile",
                             "host": [
