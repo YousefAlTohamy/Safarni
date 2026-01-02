@@ -32,7 +32,7 @@ class AirportController extends BaseApiController
         }
 
         $airports = $this->airportService->getPaginatedAirports(
-            $request->input('per_page', 15)
+            (int) $request->input('per_page', 15)
         );
 
         return AirportResource::collection($airports);

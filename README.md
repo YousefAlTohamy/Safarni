@@ -40,7 +40,7 @@ Safarni is a full-featured travel booking platform designed to handle:
 
 1. **Flight Booking System** - Search, compare, and book flights with seat selection
 2. **Tour Packages** - Browse and book guided tour packages
-3. **Hotels** *(Planned)* - Hotel room reservations
+3. **Hotels** *(In Progress)* - Hotel browsing complete, room booking in progress
 4. **Car Rentals** *(Planned)* - Vehicle rental services
 
 ### Business Model
@@ -146,7 +146,7 @@ The project follows a **Service-Repository Pattern** with clear separation of co
 | Password Reset | ✅ Complete | OTP-based password recovery flow |
 | Profile Management | ✅ Complete | View, update, deactivate, delete account |
 | Account Deactivation | ✅ Complete | Secure account deactivation with password verification |
-| Account Reactivation | ✅ Complete | OTP-based account reactivation flow |
+| Account Reactivation | � Planned | OTP-based account reactivation flow (OtpType::REACTIVATION enum ready, API routes not yet implemented) |
 | Account Restoration | ✅ Complete | Automatic restoration of soft-deleted accounts on re-registration |
 
 ### Flight Booking Module
@@ -172,12 +172,24 @@ The project follows a **Service-Repository Pattern** with clear separation of co
 | Airline CRUD | ✅ Complete | Manage airline information |
 | Flight CRUD | ✅ Complete | Full flight management |
 
+### Hotel Booking Module
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Hotel Recommendations | ✅ Complete | Top rated and discounted hotels |
+| Nearby Hotels | ✅ Complete | Location-based hotel discovery with Haversine formula |
+| Hotel Search | ✅ Complete | Search by city, dates, and guest count |
+| Room Availability | ✅ Complete | List rooms with availability filtering |
+| Room Details | ✅ Complete | Detailed room info with hotel, gallery, reviews |
+| Hotel Reviews | ✅ Complete | View and submit hotel reviews with ratings |
+| Hotel Gallery | ✅ Complete | View and upload hotel images |
+
 ### Modules In Progress / Planned
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Tour Booking | 🚧 In Progress | Tour package browsing and booking |
-| Hotel Booking | 📋 Planned | Hotel room reservations |
+| Tour Booking | � Planned | Tour package browsing and booking (Tours table/model ready, booking workflow not implemented) |
+| Hotel Room Booking | 📋 Planned | Complete room reservation workflow (browsing complete, checkout not implemented) |
 | Car Rentals | 📋 Planned | Vehicle rental services |
 | Payment Gateway | 📋 Planned | Stripe/Payment integration |
 | Notifications | 📋 Planned | Push/Email notifications |
@@ -190,7 +202,7 @@ The project follows a **Service-Repository Pattern** with clear separation of co
 
 | Table | Description | Key Fields |
 |-------|-------------|------------|
-| `users` | User accounts | id, name, email, password, role, is_verified |
+| `users` | User accounts | id, name, email, password, role, is_verified, latitude, longitude |
 | `categories` | Booking categories | id, key, title, description |
 | `bookings` | All booking records | id, user_id, category, item_id, total_price, status |
 | `booking_details` | Extended booking data | id, booking_id, meta (JSON) |
@@ -201,6 +213,9 @@ The project follows a **Service-Repository Pattern** with clear separation of co
 | `flights` | Flight schedules | id (UUID), flight_number, airline_id, departure_time |
 | `seats` | Seat inventory | id (UUID), flight_id, class, row, column, is_available |
 | `passengers` | Traveler details | id, booking_id, first_name, passport_number |
+| `hotels` | Hotel properties | id, name, description, city, rating, discount, coordinates |
+| `rooms` | Hotel rooms | id, hotel_id, name, price_per_night, occupancy, bed_type, area |
+| `hotel_images` | Hotel gallery images | id, hotel_id, image_path, user_id |
 | `tours` | Tour packages | id, category_id, title, location, price |
 | `otps` | Verification codes | id, email, code, type, expires_at |
 | `reviews` | User reviews | id, user_id, category, item_id, rating |
@@ -218,6 +233,8 @@ erDiagram
         string email UK
         string phone
         string location
+        decimal latitude
+        decimal longitude
         string profile_image
         boolean is_verified
         boolean is_admin
@@ -355,6 +372,44 @@ erDiagram
         timestamp updated_at
     }
 
+    hotels {
+        bigint id PK
+        string name
+        string description
+        string address
+        string city
+        decimal latitude
+        decimal longitude
+        decimal rating
+        string main_image
+        int discount
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    rooms {
+        bigint id PK
+        bigint hotel_id FK
+        string name
+        string main_image
+        int price_per_night
+        int occupancy
+        string bed_type
+        int area
+        int bathrooms
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    hotel_images {
+        bigint id PK
+        bigint hotel_id FK
+        string image_path
+        bigint user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
     tours {
         bigint id PK
         bigint category_id FK
@@ -424,6 +479,14 @@ erDiagram
     airports ||--o{ flights : "destination"
     
     flights ||--o{ seats : "has"
+    
+    hotels ||--o{ rooms : "has"
+    hotels ||--o{ hotel_images : "has"
+    hotels ||--o{ reviews : "receives"
+    
+    rooms ||--o{ bookings : "booked_as"
+    
+    users ||--o{ hotel_images : "uploads"
 ```
 
 ---
@@ -449,8 +512,6 @@ erDiagram
 | POST | `/api/auth/forgot-password` | Initiate password reset |
 | POST | `/api/auth/verify-reset-otp` | Verify reset OTP |
 | POST | `/api/auth/reset-password` | Complete password reset |
-| POST | `/api/auth/request-reactivation` | Request account reactivation OTP |
-| POST | `/api/auth/reactivate` | Reactivate account with OTP |
 | POST | `/api/auth/resend-otp` | Resend verification OTP |
 
 #### Airports
@@ -475,7 +536,17 @@ erDiagram
 | GET | `/api/flights/compare` | Compare multiple flights |
 | GET | `/api/flights/{id}/seats` | Get available seats |
 
+#### Seats (Public)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/seats/{seat}` | Get specific seat details |
+
 ### Protected Endpoints (Requires Authentication)
+
+#### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/logout` | Logout user and revoke token |
 
 #### Profile Management
 | Method | Endpoint | Description |
@@ -494,7 +565,6 @@ erDiagram
 #### Seat Management
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/seats/{seat}` | Get specific seat details |
 | POST | `/api/seats/lock` | Lock seats temporarily |
 | DELETE | `/api/seats/{id}/release` | Release locked seat |
 
@@ -529,6 +599,20 @@ erDiagram
 | POST | `/api/admin/flights` | Create flight |
 | PUT | `/api/admin/flights/{id}` | Update flight |
 | DELETE | `/api/admin/flights/{id}` | Delete flight |
+
+### Hotel Endpoints (Requires Authentication)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/hotels/recommendations` | Get top rated/discounted hotels |
+| GET | `/api/hotels/nearby` | Get nearby hotels (uses user location) |
+| GET | `/api/hotels/search` | Search hotels by city, dates, guests |
+| GET | `/api/hotels/{hotel}/rooms` | List available rooms for a hotel |
+| GET | `/api/hotels/{hotel}/rooms/{room}` | Get room details with hotel info |
+| GET | `/api/hotels/{hotel}/reviews` | List hotel reviews |
+| POST | `/api/hotels/{hotel}/reviews` | Submit a hotel review |
+| GET | `/api/hotels/{hotel}/gallery` | Get hotel gallery images |
+| POST | `/api/hotels/{hotel}/gallery` | Upload images to hotel gallery |
 
 ---
 
@@ -605,7 +689,12 @@ huma-volve-backend/
 │   │           ├── HomeController.php
 │   │           ├── PassengerController.php
 │   │           ├── ProfileController.php
-│   │           └── SeatController.php
+│   │           ├── SeatController.php
+│   │           └── Hotel/        # Hotel Module Controllers
+│   │               ├── HotelHomepageController.php
+│   │               ├── RoomController.php
+│   │               ├── HotelReviewController.php
+│   │               └── HotelGalleryController.php
 │   │
 │   ├── Interfaces/               # Repository interfaces
 │   │
@@ -618,17 +707,19 @@ huma-volve-backend/
 │   │   ├── Category.php
 │   │   ├── Favorite.php
 │   │   ├── Flight.php
+│   │   ├── Hotel.php
+│   │   ├── HotelImage.php
 │   │   ├── Otp.php
 │   │   ├── Passenger.php
 │   │   ├── Payment.php
 │   │   ├── Review.php
+│   │   ├── Room.php
 │   │   ├── Seat.php
 │   │   ├── Tour.php
 │   │   └── User.php
 │   │
 │   ├── Repositories/             # Data access layer
 │   │   ├── BaseRepository.php
-│   │   ├── AircraftRepository.php
 │   │   ├── AirlineRepository.php
 │   │   ├── AirportRepository.php
 │   │   ├── BookingRepository.php
@@ -651,6 +742,9 @@ huma-volve-backend/
 │       ├── PassengerService.php
 │       ├── ProfileService.php
 │       └── SeatService.php
+│
+│   └── Traits/                   # Reusable traits
+│       └── ApiResponse.php       # Standard API response formatting
 │
 ├── database/
 │   ├── factories/                # Model factories for testing
@@ -682,8 +776,6 @@ huma-volve-backend/
 │
 ├── config/
 │   └── otp.php                   # OTP configuration
-│
-└── Round-8-safarni-team-1.postman_collection-version-2.json  # Postman Collection
 ```
 
 ---
@@ -803,7 +895,7 @@ php artisan test --coverage
 - [ ] Refund processing
 
 ### Phase 3: Extended Features
-- [ ] Hotel booking module
+- [x] Hotel booking module (Browsing complete, Booking workflow planned)
 - [ ] Car rental module
 - [ ] Multi-language support (Arabic/English)
 - [ ] Push notifications
