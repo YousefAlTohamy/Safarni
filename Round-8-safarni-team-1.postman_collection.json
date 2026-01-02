@@ -1,1548 +1,1548 @@
 {
-	"info": {
-		"_postman_id": "7b78acc6-7059-4242-acee-95549e8d374d",
-		"name": "Round-8-safarni-team-1",
-		"description": "Complete API Collection for Safarni Flight Booking System.\n\n🔐 **Authentication Flow:**\n1. Register → Verify OTP → Login\n2. After login, the token is automatically saved and used for all authenticated requests.\n\n📧 **Important Notes:**\n- Email must be a valid lowercase @gmail.com address\n- Password requires: min 6 chars, 1 uppercase, 1 special char\n- Phone must be Egyptian format: 01xxxxxxxxx or +201xxxxxxxxx\n\n📁 **Folder Structure:**\n1. Health & Home - Basic endpoints\n2. Authentication - Registration, Login, Password Reset\n3. Profile Management - User profile CRUD\n4. Airports - Browse and manage airports\n5. Airlines - Browse and manage airlines\n6. Flights - Search, compare, and manage flights\n7. Seats - View, lock, and release seats\n8. Bookings - Create and manage bookings\n9. Passengers - Manage booking passengers",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "40501299",
-		"_collection_link": "https://planetary-resonance-939978.postman.co/workspace/Huma-Volve~b1113844-47de-4050-85ec-04a6a86a2638/collection/40501299-7b78acc6-7059-4242-acee-95549e8d374d?action=share&source=collection_link&creator=40501299"
-	},
-	"item": [
-		{
-			"name": "1. Health and Home",
-			"item": [
-				{
-					"name": "1.1 Health Check",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/health",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"health"
-							]
-						},
-						"description": "Check if the API server is running and healthy. Returns status and timestamp."
-					},
-					"response": []
-				},
-				{
-					"name": "1.2 Get Home Page Data",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/home",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"home"
-							]
-						},
-						"description": "Get home page data including featured flights, popular destinations, etc."
-					},
-					"response": []
-				}
-			],
-			"description": "Basic endpoints to check API status and get home page data."
-		},
-		{
-			"name": "2. Authentication",
-			"item": [
-				{
-					"name": "2.1 Register New User",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201 || pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.email) {",
-									"        pm.collectionVariables.set('user_email', jsonData.data.email);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"testuser@gmail.com\",\n    \"password\": \"Password@123\",\n    \"password_confirmation\": \"Password@123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/register",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						},
-						"description": "Register a new user.\n\n**Requirements:**\n- Name: min 3 chars, alphanumeric with - and _\n- Email: must be lowercase @gmail.com\n- Password: min 6 chars, 1 uppercase, 1 special char"
-					},
-					"response": []
-				},
-				{
-					"name": "2.2 Verify OTP",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/verify",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"verify"
-							]
-						},
-						"description": "Verify email using the 4-digit OTP sent to the registered email."
-					},
-					"response": []
-				},
-				{
-					"name": "2.3 Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.token) {",
-									"        pm.collectionVariables.set('auth_token', jsonData.data.token);",
-									"    } else if (jsonData.token) {",
-									"        pm.collectionVariables.set('auth_token', jsonData.token);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"testuser@gmail.com\",\n    \"password\": \"Password@123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/login",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
-						},
-						"description": "Login with email and password.\n\n**Note:** Token is automatically saved after successful login."
-					},
-					"response": []
-				},
-				{
-					"name": "2.4 Get Google OAuth URL",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/auth/google",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"google"
-							]
-						},
-						"description": "Get the Google OAuth redirect URL for social login."
-					},
-					"response": []
-				},
-				{
-					"name": "2.5 Forgot Password",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"{{user_email}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/forgot-password",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"forgot-password"
-							]
-						},
-						"description": "Request a password reset OTP to be sent to the email."
-					},
-					"response": []
-				},
-				{
-					"name": "2.6 Verify Password Reset OTP",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/verify-reset-otp",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"verify-reset-otp"
-							]
-						},
-						"description": "Verify the password reset OTP before setting a new password."
-					},
-					"response": []
-				},
-				{
-					"name": "2.7 Reset Password",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\",\n    \"password\": \"NewPassword@123\",\n    \"password_confirmation\": \"NewPassword@123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/reset-password",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"reset-password"
-							]
-						},
-						"description": "Set a new password after OTP verification.\n\n**Password Requirements:**\n- Min 6 characters\n- At least 1 uppercase letter\n- At least 1 special character"
-					},
-					"response": []
-				},
-				{
-					"name": "2.8 Resend OTP",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"raw": "{\n    \"email\": \"{{user_email}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/resend-otp",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"resend-otp"
-							]
-						},
-						"description": "Resend OTP code.\n\n**Type options:**\n- `verification` - for email verification\n- `password_reset` - for password reset"
-					},
-					"response": []
-				},
-				{
-					"name": "2.9 Logout",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    pm.collectionVariables.set('auth_token', '');",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
-						},
-						"description": "Logout and invalidate the current token.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "2.10 Google Callback",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/auth/google/callback?code=AUTH_CODE_HERE",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"google",
-								"callback"
-							],
-							"query": [
-								{
-									"key": "code",
-									"value": "AUTH_CODE_HERE",
-									"description": "The authorization code returned by Google"
-								}
-							]
-						},
-						"description": "Handle the callback from Google OAuth.\n\n**Note:** This endpoint is usually called by the frontend or browser after Google redirects back."
-					},
-					"response": []
-				}
-			],
-			"description": "User authentication endpoints: registration, login, password reset, and logout."
-		},
-		{
-			"name": "3. Profile Management",
-			"item": [
-				{
-					"name": "3.1 Get Current User",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/user",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"user"
-							]
-						},
-						"description": "Get the currently authenticated user's basic info.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "3.2 Get Profile",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"profile"
-							]
-						},
-						"description": "Get the full profile of the authenticated user.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "3.3 Update Profile",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "Updated Name",
-									"type": "text"
-								},
-								{
-									"key": "email",
-									"value": "newemail@gmail.com",
-									"type": "text"
-								},
-								{
-									"key": "phone",
-									"value": "+201234567890",
-									"type": "text"
-								},
-								{
-									"key": "location",
-									"value": "Cairo, Egypt",
-									"type": "text"
-								},
-								{
-									"key": "profile_image",
-									"type": "file",
-									"src": []
-								},
-								{
-									"key": "_method",
-									"value": "PUT",
-									"type": "text",
-									"disabled": true,
-									"description": "Enable if using POST Tunneling for file uploads"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"profile"
-							]
-						},
-						"description": "Update user profile.\n\n**Requirements:**\n- Email: must be lowercase @gmail.com\n- Phone: Egyptian format (+201xxxxxxxxx or 01xxxxxxxxx)\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "3.4 Change Password",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"current_password\": \"Password@123\",\n    \"password\": \"NewPassword@123\",\n    \"password_confirmation\": \"NewPassword@123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/profile/password",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"profile",
-								"password"
-							]
-						},
-						"description": "Change the authenticated user's password.\n\n**Requires:** Authentication + Verified Email"
-					},
-					"response": []
-				},
-				{
-					"name": "3.5 Deactivate Account",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/profile/deactivate",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"profile",
-								"deactivate"
-							]
-						},
-						"description": "Deactivate the authenticated user's account.\n\n**Requires:** Authentication + Verified Email"
-					},
-					"response": []
-				},
-				{
-					"name": "3.6 Delete Account",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"profile"
-							]
-						},
-						"description": "Permanently delete the authenticated user's account (soft delete).\n\n**Requires:** Authentication + Verified Email"
-					},
-					"response": []
-				}
-			],
-			"description": "User profile management endpoints. All require authentication."
-		},
-		{
-			"name": "4. Airports",
-			"item": [
-				{
-					"name": "4.1 List Airports",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airports?per_page=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airports"
-							],
-							"query": [
-								{
-									"key": "per_page",
-									"value": "15",
-									"description": "Number of results per page"
-								}
-							]
-						},
-						"description": "Get a paginated list of all airports."
-					},
-					"response": []
-				},
-				{
-					"name": "4.2 Search Airports",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airports?search=cairo",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airports"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": "cairo",
-									"description": "Search by name, city, or IATA code"
-								}
-							]
-						},
-						"description": "Search airports by name, city, or IATA code."
-					},
-					"response": []
-				},
-				{
-					"name": "4.3 Get Airport by ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airports/{{airport_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airports",
-								"{{airport_id}}"
-							]
-						},
-						"description": "Get a single airport by its ID."
-					},
-					"response": []
-				},
-				{
-					"name": "4.4 Get Airport by IATA Code",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airports/code/CAI",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airports",
-								"code",
-								"CAI"
-							]
-						},
-						"description": "Get an airport by its 3-letter IATA code (e.g., CAI for Cairo)."
-					},
-					"response": []
-				},
-				{
-					"name": "4.5 Create Airport (Admin)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"code\": \"XXX\",\n    \"name\": \"New International Airport\",\n    \"city\": \"New City\",\n    \"latitude\": 30.1234,\n    \"longitude\": 31.5678,\n    \"timezone\": \"Africa/Cairo\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/airports",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airports"
-							]
-						},
-						"description": "Create a new airport.\n\n**Requirements:**\n- Code: exactly 3 letters (IATA code)\n- Latitude: -90 to 90\n- Longitude: -180 to 180\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "4.6 Update Airport (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Updated Airport Name\",\n    \"city\": \"Updated City\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/airports/{{airport_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airports",
-								"{{airport_id}}"
-							]
-						},
-						"description": "Update an existing airport.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "4.7 Delete Airport (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/admin/airports/{{airport_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airports",
-								"{{airport_id}}"
-							]
-						},
-						"description": "Delete an airport.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				}
-			],
-			"description": "Browse and manage airports. Public endpoints for viewing, Admin endpoints for CRUD."
-		},
-		{
-			"name": "5. Airlines",
-			"item": [
-				{
-					"name": "5.1 List Airlines",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airlines?per_page=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airlines"
-							],
-							"query": [
-								{
-									"key": "per_page",
-									"value": "15",
-									"description": "Number of results per page"
-								}
-							]
-						},
-						"description": "Get a paginated list of all airlines."
-					},
-					"response": []
-				},
-				{
-					"name": "5.2 List Active Airlines Only",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airlines?active_only=true",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airlines"
-							],
-							"query": [
-								{
-									"key": "active_only",
-									"value": "true",
-									"description": "Filter to show only active airlines"
-								}
-							]
-						},
-						"description": "Get only active airlines."
-					},
-					"response": []
-				},
-				{
-					"name": "5.3 Search Airlines",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airlines?search=egypt",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airlines"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": "egypt",
-									"description": "Search by airline name or code"
-								}
-							]
-						},
-						"description": "Search airlines by name or IATA code."
-					},
-					"response": []
-				},
-				{
-					"name": "5.4 Get Airline by ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airlines/{{airline_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airlines",
-								"{{airline_id}}"
-							]
-						},
-						"description": "Get a single airline by its ID."
-					},
-					"response": []
-				},
-				{
-					"name": "5.5 Get Airline by IATA Code",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/airlines/code/MS",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"airlines",
-								"code",
-								"MS"
-							]
-						},
-						"description": "Get an airline by its 2-letter IATA code (e.g., MS for EgyptAir)."
-					},
-					"response": []
-				},
-				{
-					"name": "5.6 Create Airline (Admin)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"code\": \"XX\",\n    \"name\": \"New Airline\",\n    \"logo_url\": \"https://example.com/logo.png\",\n    \"is_active\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/airlines",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airlines"
-							]
-						},
-						"description": "Create a new airline.\n\n**Requirements:**\n- Code: exactly 2 letters (IATA code)\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "5.7 Update Airline (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Updated Airline Name\",\n    \"is_active\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/airlines/{{airline_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airlines",
-								"{{airline_id}}"
-							]
-						},
-						"description": "Update an existing airline.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "5.8 Delete Airline (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/admin/airlines/{{airline_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"airlines",
-								"{{airline_id}}"
-							]
-						},
-						"description": "Delete an airline.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				}
-			],
-			"description": "Browse and manage airlines. Public endpoints for viewing, Admin endpoints for CRUD."
-		},
-		{
-			"name": "6. Flights",
-			"item": [
-				{
-					"name": "6.1 Search Flights",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.length > 0) {",
-									"        pm.collectionVariables.set('flight_id', jsonData.data[0].id);",
-									"        console.log('Saved flight_id: ' + jsonData.data[0].id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/flights?origin=CAI&destination=JFK&date=2025-02-01",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"flights"
-							],
-							"query": [
-								{
-									"key": "origin",
-									"value": "CAI",
-									"description": "Origin airport IATA code"
-								},
-								{
-									"key": "destination",
-									"value": "JFK",
-									"description": "Destination airport IATA code"
-								},
-								{
-									"key": "date",
-									"value": "2025-02-01",
-									"description": "Departure date (YYYY-MM-DD)"
-								}
-							]
-						},
-						"description": "Search for available flights.\n\n**Note:** First flight ID is automatically saved for subsequent requests."
-					},
-					"response": []
-				},
-				{
-					"name": "6.2 Get Flight by ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/flights/{{flight_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"flights",
-								"{{flight_id}}"
-							]
-						},
-						"description": "Get detailed information about a specific flight."
-					},
-					"response": []
-				},
-				{
-					"name": "6.3 Compare Flights",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/flights/compare?flight_ids[]=uuid1&flight_ids[]=uuid2",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"flights",
-								"compare"
-							],
-							"query": [
-								{
-									"key": "flight_ids[]",
-									"value": "uuid1",
-									"description": "First flight UUID"
-								},
-								{
-									"key": "flight_ids[]",
-									"value": "uuid2",
-									"description": "Second flight UUID"
-								}
-							]
-						},
-						"description": "Compare 2-5 flights side by side.\n\n**Usage:** Replace uuid1, uuid2 with actual flight IDs."
-					},
-					"response": []
-				},
-				{
-					"name": "6.4 Get Flight Seats",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.seats_by_class) {",
-									"        var classes = Object.keys(jsonData.data.seats_by_class);",
-									"        if (classes.length > 0 && jsonData.data.seats_by_class[classes[0]].length > 0) {",
-									"            pm.collectionVariables.set('seat_id', jsonData.data.seats_by_class[classes[0]][0].id);",
-									"            console.log('Saved seat_id: ' + jsonData.data.seats_by_class[classes[0]][0].id);",
-									"        }",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/flights/{{flight_id}}/seats",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"flights",
-								"{{flight_id}}",
-								"seats"
-							]
-						},
-						"description": "Get available seats for a flight, grouped by class.\n\n**Note:** First seat ID is automatically saved for subsequent requests."
-					},
-					"response": []
-				},
-				{
-					"name": "6.5 Create Flight (Admin)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"flight_number\": \"MS100\",\n    \"airline_id\": 1,\n    \"aircraft_id\": 1,\n    \"origin_airport_id\": 1,\n    \"destination_airport_id\": 2,\n    \"departure_time\": \"2025-02-01T10:00:00Z\",\n    \"arrival_time\": \"2025-02-01T14:00:00Z\",\n    \"duration_minutes\": 240,\n    \"stops\": 0,\n    \"layover_details\": [\n        {\n            \"airport\": \"DXB\",\n            \"duration_minutes\": 60\n        }\n    ],\n    \"base_price_egp\": 5000,\n    \"tax_percentage\": 14,\n    \"baggage_rules\": \"Max 30kg checked, 7kg cabin\",\n    \"fare_conditions\": \"Refundable with 10% fee\",\n    \"is_refundable\": true,\n    \"is_active\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/flights",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"flights"
-							]
-						},
-						"description": "Create a new flight.\n\n**Requirements:**\n- Origin and destination must be different airports\n- Departure time must be in the future\n- Arrival time must be after departure\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "6.6 Update Flight (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"base_price_egp\": 6000,\n    \"is_active\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/flights/{{flight_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"flights",
-								"{{flight_id}}"
-							]
-						},
-						"description": "Update an existing flight.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "6.7 Delete Flight (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/admin/flights/{{flight_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"flights",
-								"{{flight_id}}"
-							]
-						},
-						"description": "Delete a flight.\n\n**Requires:** Admin Authentication"
-					},
-					"response": []
-				}
-			],
-			"description": "Search, compare, and manage flights. Public endpoints for browsing, Admin endpoints for CRUD."
-		},
-		{
-			"name": "7. Seats",
-			"item": [
-				{
-					"name": "7.1 Get Seat by ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/seats/{{seat_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"seats",
-								"{{seat_id}}"
-							]
-						},
-						"description": "Get details of a specific seat including availability status."
-					},
-					"response": []
-				},
-				{
-					"name": "7.2 Lock Seat",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"seat_id\": \"{{seat_id}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/seats/lock",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"seats",
-								"lock"
-							]
-						},
-						"description": "Temporarily lock a seat for the current user.\n\n**Note:** Lock expires after a set time if not confirmed.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "7.3 Release Seat",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/seats/{{seat_id}}/release",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"seats",
-								"{{seat_id}}",
-								"release"
-							]
-						},
-						"description": "Release a previously locked seat.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				}
-			],
-			"description": "View, lock, and release seats. Lock/release require authentication."
-		},
-		{
-			"name": "8. Bookings",
-			"item": [
-				{
-					"name": "8.1 List My Bookings",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/bookings?per_page=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings"
-							],
-							"query": [
-								{
-									"key": "per_page",
-									"value": "15",
-									"description": "Number of bookings per page"
-								}
-							]
-						},
-						"description": "Get all bookings for the authenticated user.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "8.2 Create Booking Summary (Pre-checkout)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.booking_token) {",
-									"        pm.collectionVariables.set('booking_token', jsonData.data.booking_token);",
-									"        console.log('Saved booking_token: ' + jsonData.data.booking_token);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"flight_id\": \"{{flight_id}}\",\n    \"passengers\": [\n        {\n            \"title\": \"Mr\",\n            \"first_name\": \"John\",\n            \"last_name\": \"Doe\",\n            \"date_of_birth\": \"1990-01-15\",\n            \"passport_number\": \"A12345678\",\n            \"passport_expiry\": \"2028-01-15\",\n            \"nationality\": \"EG\"\n        }\n    ],\n    \"seat_ids\": [\"{{seat_id}}\"]\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/bookings/summary",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"summary"
-							]
-						},
-						"description": "Create a booking summary before checkout.\n\n**Passenger Title Options:** Mr, Mrs, Ms, Dr\n**Max Passengers:** 9 per booking\n\n**Note:** Booking token is automatically saved.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "8.3 Checkout Booking",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.id) {",
-									"        pm.collectionVariables.set('booking_id', jsonData.data.id);",
-									"        console.log('Saved booking_id: ' + jsonData.data.id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"booking_token\": \"{{booking_token}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/bookings/checkout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"checkout"
-							]
-						},
-						"description": "Complete the booking checkout.\n\n**Note:** Booking ID is automatically saved after success.\n\n**Requires:** Authentication"
-					},
-					"response": []
-				},
-				{
-					"name": "8.4 Get Booking by ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/bookings/{{booking_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"{{booking_id}}"
-							]
-						},
-						"description": "Get detailed information about a specific booking.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				},
-				{
-					"name": "8.5 Cancel Booking",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/bookings/{{booking_id}}/cancel",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"{{booking_id}}",
-								"cancel"
-							]
-						},
-						"description": "Cancel an existing booking.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				}
-			],
-			"description": "Create and manage flight bookings. All endpoints require authentication."
-		},
-		{
-			"name": "9. Passengers",
-			"item": [
-				{
-					"name": "9.1 List Booking Passengers",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.length > 0) {",
-									"        pm.collectionVariables.set('passenger_id', jsonData.data[0].id);",
-									"        console.log('Saved passenger_id: ' + jsonData.data[0].id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/bookings/{{booking_id}}/passengers",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"{{booking_id}}",
-								"passengers"
-							]
-						},
-						"description": "Get all passengers for a specific booking.\n\n**Note:** First passenger ID is automatically saved.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				},
-				{
-					"name": "9.2 Add Passenger to Booking",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"booking_id\": {{booking_id}},\n    \"title\": \"Mrs\",\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Doe\",\n    \"date_of_birth\": \"1992-05-20\",\n    \"passport_number\": \"B87654321\",\n    \"passport_expiry\": \"2029-05-20\",\n    \"nationality\": \"EG\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/bookings/{{booking_id}}/passengers",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"bookings",
-								"{{booking_id}}",
-								"passengers"
-							]
-						},
-						"description": "Add a passenger to an existing booking.\n\n**Title Options:** Mr, Mrs, Ms, Dr\n**Passport Number:** Uppercase letters and numbers only\n**Nationality:** 2-letter ISO country code\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				},
-				{
-					"name": "9.3 Get Passenger by ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/passengers/{{passenger_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"passengers",
-								"{{passenger_id}}"
-							]
-						},
-						"description": "Get details of a specific passenger.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				},
-				{
-					"name": "9.4 Update Passenger",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"first_name\": \"Jane Updated\",\n    \"special_requests\": \"Window seat preferred\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/passengers/{{passenger_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"passengers",
-								"{{passenger_id}}"
-							]
-						},
-						"description": "Update passenger information.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				},
-				{
-					"name": "9.5 Delete Passenger",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/passengers/{{passenger_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"passengers",
-								"{{passenger_id}}"
-							]
-						},
-						"description": "Remove a passenger from a booking.\n\n**Requires:** Authentication (must own the booking)"
-					},
-					"response": []
-				}
-			],
-			"description": "Manage passengers for bookings. All endpoints require authentication."
-		}
-	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{auth_token}}",
-				"type": "string"
-			}
-		]
-	},
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"pm.request.headers.add({key: 'Content-Type', value: 'application/json'});",
-					"pm.request.headers.add({key: 'Accept', value: 'application/json'});"
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "https://round8-backend-safarni-one.huma-volve.com/api",
-			"type": "string"
-		},
-		{
-			"key": "auth_token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "user_email",
-			"value": "testuser@gmail.com",
-			"type": "string"
-		},
-		{
-			"key": "airport_id",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "airline_id",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "flight_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "seat_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "booking_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "passenger_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "booking_token",
-			"value": "",
-			"type": "string"
-		}
-	]
+    "info": {
+        "_postman_id": "7b78acc6-7059-4242-acee-95549e8d374d",
+        "name": "Round-8-safarni-team-1",
+        "description": "Complete API Collection for Safarni Flight Booking System.\n\n🔐 **Authentication Flow:**\n1. Register → Verify OTP → Login\n2. After login, the token is automatically saved and used for all authenticated requests.\n\n📧 **Important Notes:**\n- Email must be a valid lowercase @gmail.com address\n- Password requires: min 6 chars, 1 uppercase, 1 special char\n- Phone must be Egyptian format: 01xxxxxxxxx or +201xxxxxxxxx\n\n📁 **Folder Structure:**\n1. Health & Home - Basic endpoints\n2. Authentication - Registration, Login, Password Reset\n3. Profile Management - User profile CRUD\n4. Airports - Browse and manage airports\n5. Airlines - Browse and manage airlines\n6. Flights - Search, compare, and manage flights\n7. Seats - View, lock, and release seats\n8. Bookings - Create and manage bookings\n9. Passengers - Manage booking passengers",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "40501299",
+        "_collection_link": "https://planetary-resonance-939978.postman.co/workspace/Huma-Volve~b1113844-47de-4050-85ec-04a6a86a2638/collection/40501299-7b78acc6-7059-4242-acee-95549e8d374d?action=share&source=collection_link&creator=40501299"
+    },
+    "item": [
+        {
+            "name": "1. Health and Home",
+            "item": [
+                {
+                    "name": "1.1 Health Check",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check if the API server is running and healthy. Returns status and timestamp."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "1.2 Get Home Page Data",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/home",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "home"
+                            ]
+                        },
+                        "description": "Get home page data including featured flights, popular destinations, etc."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Basic endpoints to check API status and get home page data."
+        },
+        {
+            "name": "2. Authentication",
+            "item": [
+                {
+                    "name": "2.1 Register New User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201 || pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.email) {",
+                                    "        pm.collectionVariables.set('user_email', jsonData.data.email);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"testuser@gmail.com\",\n    \"password\": \"Password@123\",\n    \"password_confirmation\": \"Password@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Register a new user.\n\n**Requirements:**\n- Name: min 3 chars, alphanumeric with - and _\n- Email: must be lowercase @gmail.com\n- Password: min 6 chars, 1 uppercase, 1 special char"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.2 Verify OTP",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "verify"
+                            ]
+                        },
+                        "description": "Verify email using the 4-digit OTP sent to the registered email."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.3 Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.token) {",
+                                    "        pm.collectionVariables.set('auth_token', jsonData.data.token);",
+                                    "    } else if (jsonData.token) {",
+                                    "        pm.collectionVariables.set('auth_token', jsonData.token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"testuser@gmail.com\",\n    \"password\": \"Password@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login with email and password.\n\n**Note:** Token is automatically saved after successful login."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.4 Get Google OAuth URL",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/google",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google"
+                            ]
+                        },
+                        "description": "Get the Google OAuth redirect URL for social login."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.5 Forgot Password",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{user_email}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "description": "Request a password reset OTP to be sent to the email."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.6 Verify Password Reset OTP",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/verify-reset-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "verify-reset-otp"
+                            ]
+                        },
+                        "description": "Verify the password reset OTP before setting a new password."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.7 Reset Password",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{user_email}}\",\n    \"code\": \"1234\",\n    \"password\": \"NewPassword@123\",\n    \"password_confirmation\": \"NewPassword@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/reset-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "reset-password"
+                            ]
+                        },
+                        "description": "Set a new password after OTP verification.\n\n**Password Requirements:**\n- Min 6 characters\n- At least 1 uppercase letter\n- At least 1 special character"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.8 Resend OTP",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "raw": "{\n    \"email\": \"{{user_email}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/resend-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "resend-otp"
+                            ]
+                        },
+                        "description": "Resend OTP code.\n\n**Type options:**\n- `verification` - for email verification\n- `password_reset` - for password reset"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.9 Logout",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.collectionVariables.set('auth_token', '');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "description": "Logout and invalidate the current token.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2.10 Google Callback (Documentation/Internal)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/google/callback?code=AUTH_CODE_HERE",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google",
+                                "callback"
+                            ],
+                            "query": [
+                                {
+                                    "key": "code",
+                                    "value": "AUTH_CODE_HERE",
+                                    "description": "The authorization code returned by Google"
+                                }
+                            ]
+                        },
+                        "description": "Handle the callback from Google OAuth.\n\n**IMPORTANT:** The Authorization Code from Google is **ONE-TIME USE**.\n\n**Manual Testing Guide:**\n1. If you pasted the URL in the browser and saw a JSON response with `\"success\": true` (and a token), **IT WORKED!** you have successfully logged in.\n2. You **CANNOT** use that same code here in Postman because your browser already used it.\n3. To test specifically in Postman, you must intercept the redirect code *before* your browser loads the final page (e.g. using Network tab 'Preserve Log').\n4. Otherwise, just grab the `token` from your browser window and use it."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "User authentication endpoints: registration, login, password reset, and logout."
+        },
+        {
+            "name": "3. Profile Management",
+            "item": [
+                {
+                    "name": "3.1 Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/user",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "user"
+                            ]
+                        },
+                        "description": "Get the currently authenticated user's basic info.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3.2 Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile"
+                            ]
+                        },
+                        "description": "Get the full profile of the authenticated user.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3.3 Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "Updated Name",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "newemail@gmail.com",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "phone",
+                                    "value": "+201234567890",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "location",
+                                    "value": "Cairo, Egypt",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "profile_image",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "_method",
+                                    "value": "PUT",
+                                    "type": "text",
+                                    "disabled": true,
+                                    "description": "Enable if using POST Tunneling for file uploads"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile"
+                            ]
+                        },
+                        "description": "Update user profile.\n\n**Requirements:**\n- Email: must be lowercase @gmail.com\n- Phone: Egyptian format (+201xxxxxxxxx or 01xxxxxxxxx)\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3.4 Change Password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"current_password\": \"Password@123\",\n    \"password\": \"NewPassword@123\",\n    \"password_confirmation\": \"NewPassword@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/profile/password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile",
+                                "password"
+                            ]
+                        },
+                        "description": "Change the authenticated user's password.\n\n**Requires:** Authentication + Verified Email"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3.5 Deactivate Account",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/profile/deactivate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile",
+                                "deactivate"
+                            ]
+                        },
+                        "description": "Deactivate the authenticated user's account.\n\n**Requires:** Authentication + Verified Email"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3.6 Delete Account",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "profile"
+                            ]
+                        },
+                        "description": "Permanently delete the authenticated user's account (soft delete).\n\n**Requires:** Authentication + Verified Email"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "User profile management endpoints. All require authentication."
+        },
+        {
+            "name": "4. Airports",
+            "item": [
+                {
+                    "name": "4.1 List Airports",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airports?per_page=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airports"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Number of results per page"
+                                }
+                            ]
+                        },
+                        "description": "Get a paginated list of all airports."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.2 Search Airports",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airports?search=cairo",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airports"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "cairo",
+                                    "description": "Search by name, city, or IATA code"
+                                }
+                            ]
+                        },
+                        "description": "Search airports by name, city, or IATA code."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.3 Get Airport by ID",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airports/{{airport_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airports",
+                                "{{airport_id}}"
+                            ]
+                        },
+                        "description": "Get a single airport by its ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.4 Get Airport by IATA Code",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airports/code/CAI",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airports",
+                                "code",
+                                "CAI"
+                            ]
+                        },
+                        "description": "Get an airport by its 3-letter IATA code (e.g., CAI for Cairo)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.5 Create Airport (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"XXX\",\n    \"name\": \"New International Airport\",\n    \"city\": \"New City\",\n    \"latitude\": 30.1234,\n    \"longitude\": 31.5678,\n    \"timezone\": \"Africa/Cairo\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/airports",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airports"
+                            ]
+                        },
+                        "description": "Create a new airport.\n\n**Requirements:**\n- Code: exactly 3 letters (IATA code)\n- Latitude: -90 to 90\n- Longitude: -180 to 180\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.6 Update Airport (Admin)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Airport Name\",\n    \"city\": \"Updated City\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/airports/{{airport_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airports",
+                                "{{airport_id}}"
+                            ]
+                        },
+                        "description": "Update an existing airport.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4.7 Delete Airport (Admin)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/admin/airports/{{airport_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airports",
+                                "{{airport_id}}"
+                            ]
+                        },
+                        "description": "Delete an airport.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Browse and manage airports. Public endpoints for viewing, Admin endpoints for CRUD."
+        },
+        {
+            "name": "5. Airlines",
+            "item": [
+                {
+                    "name": "5.1 List Airlines",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airlines?per_page=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airlines"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Number of results per page"
+                                }
+                            ]
+                        },
+                        "description": "Get a paginated list of all airlines."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.2 List Active Airlines Only",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airlines?active_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airlines"
+                            ],
+                            "query": [
+                                {
+                                    "key": "active_only",
+                                    "value": "true",
+                                    "description": "Filter to show only active airlines"
+                                }
+                            ]
+                        },
+                        "description": "Get only active airlines."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.3 Search Airlines",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airlines?search=egypt",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airlines"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "egypt",
+                                    "description": "Search by airline name or code"
+                                }
+                            ]
+                        },
+                        "description": "Search airlines by name or IATA code."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.4 Get Airline by ID",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airlines/{{airline_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airlines",
+                                "{{airline_id}}"
+                            ]
+                        },
+                        "description": "Get a single airline by its ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.5 Get Airline by IATA Code",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/airlines/code/MS",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "airlines",
+                                "code",
+                                "MS"
+                            ]
+                        },
+                        "description": "Get an airline by its 2-letter IATA code (e.g., MS for EgyptAir)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.6 Create Airline (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"XX\",\n    \"name\": \"New Airline\",\n    \"logo_url\": \"https://example.com/logo.png\",\n    \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/airlines",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airlines"
+                            ]
+                        },
+                        "description": "Create a new airline.\n\n**Requirements:**\n- Code: exactly 2 letters (IATA code)\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.7 Update Airline (Admin)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Airline Name\",\n    \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/airlines/{{airline_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airlines",
+                                "{{airline_id}}"
+                            ]
+                        },
+                        "description": "Update an existing airline.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "5.8 Delete Airline (Admin)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/admin/airlines/{{airline_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "airlines",
+                                "{{airline_id}}"
+                            ]
+                        },
+                        "description": "Delete an airline.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Browse and manage airlines. Public endpoints for viewing, Admin endpoints for CRUD."
+        },
+        {
+            "name": "6. Flights",
+            "item": [
+                {
+                    "name": "6.1 Search Flights",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.length > 0) {",
+                                    "        pm.collectionVariables.set('flight_id', jsonData.data[0].id);",
+                                    "        console.log('Saved flight_id: ' + jsonData.data[0].id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/flights?origin=CAI&destination=JFK&date=2025-02-01",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "flights"
+                            ],
+                            "query": [
+                                {
+                                    "key": "origin",
+                                    "value": "CAI",
+                                    "description": "Origin airport IATA code"
+                                },
+                                {
+                                    "key": "destination",
+                                    "value": "JFK",
+                                    "description": "Destination airport IATA code"
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2025-02-01",
+                                    "description": "Departure date (YYYY-MM-DD)"
+                                }
+                            ]
+                        },
+                        "description": "Search for available flights.\n\n**Note:** First flight ID is automatically saved for subsequent requests."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.2 Get Flight by ID",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/flights/{{flight_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "flights",
+                                "{{flight_id}}"
+                            ]
+                        },
+                        "description": "Get detailed information about a specific flight."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.3 Compare Flights",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/flights/compare?flight_ids[]=uuid1&flight_ids[]=uuid2",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "flights",
+                                "compare"
+                            ],
+                            "query": [
+                                {
+                                    "key": "flight_ids[]",
+                                    "value": "uuid1",
+                                    "description": "First flight UUID"
+                                },
+                                {
+                                    "key": "flight_ids[]",
+                                    "value": "uuid2",
+                                    "description": "Second flight UUID"
+                                }
+                            ]
+                        },
+                        "description": "Compare 2-5 flights side by side.\n\n**Usage:** Replace uuid1, uuid2 with actual flight IDs."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.4 Get Flight Seats",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.seats_by_class) {",
+                                    "        var classes = Object.keys(jsonData.data.seats_by_class);",
+                                    "        if (classes.length > 0 && jsonData.data.seats_by_class[classes[0]].length > 0) {",
+                                    "            pm.collectionVariables.set('seat_id', jsonData.data.seats_by_class[classes[0]][0].id);",
+                                    "            console.log('Saved seat_id: ' + jsonData.data.seats_by_class[classes[0]][0].id);",
+                                    "        }",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/flights/{{flight_id}}/seats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "flights",
+                                "{{flight_id}}",
+                                "seats"
+                            ]
+                        },
+                        "description": "Get available seats for a flight, grouped by class.\n\n**Note:** First seat ID is automatically saved for subsequent requests."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.5 Create Flight (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"flight_number\": \"MS100\",\n    \"airline_id\": 1,\n    \"aircraft_id\": 1,\n    \"origin_airport_id\": 1,\n    \"destination_airport_id\": 2,\n    \"departure_time\": \"2025-02-01T10:00:00Z\",\n    \"arrival_time\": \"2025-02-01T14:00:00Z\",\n    \"duration_minutes\": 240,\n    \"stops\": 0,\n    \"layover_details\": [\n        {\n            \"airport\": \"DXB\",\n            \"duration_minutes\": 60\n        }\n    ],\n    \"base_price_egp\": 5000,\n    \"tax_percentage\": 14,\n    \"baggage_rules\": \"Max 30kg checked, 7kg cabin\",\n    \"fare_conditions\": \"Refundable with 10% fee\",\n    \"is_refundable\": true,\n    \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/flights",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "flights"
+                            ]
+                        },
+                        "description": "Create a new flight.\n\n**Requirements:**\n- Origin and destination must be different airports\n- Departure time must be in the future\n- Arrival time must be after departure\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.6 Update Flight (Admin)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"base_price_egp\": 6000,\n    \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/flights/{{flight_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "flights",
+                                "{{flight_id}}"
+                            ]
+                        },
+                        "description": "Update an existing flight.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "6.7 Delete Flight (Admin)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/admin/flights/{{flight_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "flights",
+                                "{{flight_id}}"
+                            ]
+                        },
+                        "description": "Delete a flight.\n\n**Requires:** Admin Authentication"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Search, compare, and manage flights. Public endpoints for browsing, Admin endpoints for CRUD."
+        },
+        {
+            "name": "7. Seats",
+            "item": [
+                {
+                    "name": "7.1 Get Seat by ID",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/seats/{{seat_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "seats",
+                                "{{seat_id}}"
+                            ]
+                        },
+                        "description": "Get details of a specific seat including availability status."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "7.2 Lock Seat",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"seat_id\": \"{{seat_id}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/seats/lock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "seats",
+                                "lock"
+                            ]
+                        },
+                        "description": "Temporarily lock a seat for the current user.\n\n**Note:** Lock expires after a set time if not confirmed.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "7.3 Release Seat",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/seats/{{seat_id}}/release",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "seats",
+                                "{{seat_id}}",
+                                "release"
+                            ]
+                        },
+                        "description": "Release a previously locked seat.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "View, lock, and release seats. Lock/release require authentication."
+        },
+        {
+            "name": "8. Bookings",
+            "item": [
+                {
+                    "name": "8.1 List My Bookings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/bookings?per_page=15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Number of bookings per page"
+                                }
+                            ]
+                        },
+                        "description": "Get all bookings for the authenticated user.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "8.2 Create Booking Summary (Pre-checkout)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.booking_token) {",
+                                    "        pm.collectionVariables.set('booking_token', jsonData.data.booking_token);",
+                                    "        console.log('Saved booking_token: ' + jsonData.data.booking_token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"flight_id\": \"{{flight_id}}\",\n    \"passengers\": [\n        {\n            \"title\": \"Mr\",\n            \"first_name\": \"John\",\n            \"last_name\": \"Doe\",\n            \"date_of_birth\": \"1990-01-15\",\n            \"passport_number\": \"A12345678\",\n            \"passport_expiry\": \"2028-01-15\",\n            \"nationality\": \"EG\"\n        }\n    ],\n    \"seat_ids\": [\"{{seat_id}}\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/bookings/summary",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "summary"
+                            ]
+                        },
+                        "description": "Create a booking summary before checkout.\n\n**Passenger Title Options:** Mr, Mrs, Ms, Dr\n**Max Passengers:** 9 per booking\n\n**Note:** Booking token is automatically saved.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "8.3 Checkout Booking",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.id) {",
+                                    "        pm.collectionVariables.set('booking_id', jsonData.data.id);",
+                                    "        console.log('Saved booking_id: ' + jsonData.data.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"booking_token\": \"{{booking_token}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/bookings/checkout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "checkout"
+                            ]
+                        },
+                        "description": "Complete the booking checkout.\n\n**Note:** Booking ID is automatically saved after success.\n\n**Requires:** Authentication"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "8.4 Get Booking by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/bookings/{{booking_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "{{booking_id}}"
+                            ]
+                        },
+                        "description": "Get detailed information about a specific booking.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "8.5 Cancel Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/bookings/{{booking_id}}/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "{{booking_id}}",
+                                "cancel"
+                            ]
+                        },
+                        "description": "Cancel an existing booking.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Create and manage flight bookings. All endpoints require authentication."
+        },
+        {
+            "name": "9. Passengers",
+            "item": [
+                {
+                    "name": "9.1 List Booking Passengers",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.length > 0) {",
+                                    "        pm.collectionVariables.set('passenger_id', jsonData.data[0].id);",
+                                    "        console.log('Saved passenger_id: ' + jsonData.data[0].id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/bookings/{{booking_id}}/passengers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "{{booking_id}}",
+                                "passengers"
+                            ]
+                        },
+                        "description": "Get all passengers for a specific booking.\n\n**Note:** First passenger ID is automatically saved.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "9.2 Add Passenger to Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"booking_id\": {{booking_id}},\n    \"title\": \"Mrs\",\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Doe\",\n    \"date_of_birth\": \"1992-05-20\",\n    \"passport_number\": \"B87654321\",\n    \"passport_expiry\": \"2029-05-20\",\n    \"nationality\": \"EG\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/bookings/{{booking_id}}/passengers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "bookings",
+                                "{{booking_id}}",
+                                "passengers"
+                            ]
+                        },
+                        "description": "Add a passenger to an existing booking.\n\n**Title Options:** Mr, Mrs, Ms, Dr\n**Passport Number:** Uppercase letters and numbers only\n**Nationality:** 2-letter ISO country code\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "9.3 Get Passenger by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/passengers/{{passenger_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "passengers",
+                                "{{passenger_id}}"
+                            ]
+                        },
+                        "description": "Get details of a specific passenger.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "9.4 Update Passenger",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"first_name\": \"Jane Updated\",\n    \"special_requests\": \"Window seat preferred\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/passengers/{{passenger_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "passengers",
+                                "{{passenger_id}}"
+                            ]
+                        },
+                        "description": "Update passenger information.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "9.5 Delete Passenger",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/passengers/{{passenger_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "passengers",
+                                "{{passenger_id}}"
+                            ]
+                        },
+                        "description": "Remove a passenger from a booking.\n\n**Requires:** Authentication (must own the booking)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Manage passengers for bookings. All endpoints require authentication."
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{auth_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "pm.request.headers.add({key: 'Content-Type', value: 'application/json'});",
+                    "pm.request.headers.add({key: 'Accept', value: 'application/json'});"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://round8-backend-safarni-one.huma-volve.com/api",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "user_email",
+            "value": "testuser@gmail.com",
+            "type": "string"
+        },
+        {
+            "key": "airport_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "airline_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "flight_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "seat_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "booking_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "passenger_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "booking_token",
+            "value": "",
+            "type": "string"
+        }
+    ]
 }
