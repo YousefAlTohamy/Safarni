@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
-use App\Enums\OtpType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ResendOtpRequest extends FormRequest
 {
@@ -27,7 +25,6 @@ class ResendOtpRequest extends FormRequest
     {
         return [
             'email' => ['required', 'string', 'email'],
-            'type' => ['required', 'string', Rule::in(array_column(OtpType::cases(), 'value'))],
         ];
     }
 
@@ -38,8 +35,6 @@ class ResendOtpRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'type.in' => 'Type must be "verification", "password_reset", or "reactive".',
-        ];
+        return [];
     }
 }

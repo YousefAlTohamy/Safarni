@@ -353,7 +353,7 @@ class AuthService
     /**
      * Resend OTP.
      */
-    public function resendOtp(string $email, OtpType $type): array
+    public function resendOtp(string $email): array
     {
         $user = $this->userRepository->findByEmail($email);
 
@@ -363,6 +363,17 @@ class AuthService
                 'success' => true,
                 'message' => 'If an account with that email exists, a new code has been sent.',
             ];
+        }
+
+        // Infer OTP Type
+        if (!$user->is_verified) {
+            $type = OtpType::VERIFICATION;
+        } elseif ($user->status === 'inactive') {
+            $type = OtpType::REACTIVATION;
+        } else {
+            // Default to password reset for verified, active users
+            // This assumes they are stuck in the forgot password flow
+            $type = OtpType::PASSWORD_RESET;
         }
 
         return $this->otpService->resend($email, $type);
