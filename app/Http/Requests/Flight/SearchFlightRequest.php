@@ -26,7 +26,7 @@ class SearchFlightRequest extends FormRequest
         return [
             'origin' => ['required', 'string', 'size:3', 'alpha'],
             'destination' => ['required', 'string', 'size:3', 'alpha', 'different:origin'],
-            'date' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'date' => ['required', 'date', 'date_format:Y-m-d'],
             'stops' => ['sometimes', 'integer', 'min:0', 'max:3'],
             'price_min' => ['sometimes', 'numeric', 'min:0'],
             'price_max' => ['sometimes', 'numeric', 'min:0', 'gte:price_min'],
