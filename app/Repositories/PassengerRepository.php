@@ -33,14 +33,14 @@ class PassengerRepository extends BaseRepository implements PassengerRepositoryI
      */
     public function createMany(int $bookingId, array $passengers): Collection
     {
-        $created = collect();
+        $created = [];
 
         foreach ($passengers as $passengerData) {
             $passengerData['booking_id'] = $bookingId;
             $passenger = $this->create($passengerData);
-            $created->push($passenger);
+            $created[] = $passenger;
         }
 
-        return $created;
+        return new \Illuminate\Database\Eloquent\Collection($created);
     }
 }
