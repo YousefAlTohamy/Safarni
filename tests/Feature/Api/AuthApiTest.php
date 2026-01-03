@@ -737,13 +737,16 @@ class AuthApiTest extends TestCase
     public function test_user_can_delete_account(): void
     {
         $user = User::factory()->create([
+            'password' => Hash::make('password'),
             'is_verified' => true,
             'role' => UserRole::USER->value,
         ]);
 
         Sanctum::actingAs($user);
 
-        $response = $this->deleteJson('/api/profile');
+        $response = $this->deleteJson('/api/profile', [
+            'password' => 'password',
+        ]);
 
         $response->assertStatus(200)
             ->assertJson([

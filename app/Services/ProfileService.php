@@ -165,8 +165,15 @@ class ProfileService
     /**
      * Delete user account (soft delete).
      */
-    public function deleteAccount(User $user): array
+    public function deleteAccount(User $user, string $password): array
     {
+        // Verify password
+        if (! Hash::check($password, $user->password)) {
+            return [
+                'success' => false,
+                'message' => 'Incorrect password.',
+            ];
+        }
         // Delete profile image if exists
         if ($user->profile_image) {
             Storage::disk('public')->delete($user->profile_image);

@@ -11,7 +11,7 @@ enum OtpType: string
 {
     case VERIFICATION = 'verification';
     case PASSWORD_RESET = 'password_reset';
-    case REACTIVATION = 'reactive';
+    case REACTIVATION = 'reactivation';
 
     /**
      * Get the email subject for this OTP type.
