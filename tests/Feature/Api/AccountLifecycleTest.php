@@ -100,7 +100,7 @@ class AccountLifecycleTest extends TestCase
 
         $response = $this->postJson('/api/auth/resend-otp', [
             'email' => 'inactive@gmail.com',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(200)
@@ -132,7 +132,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'inactive@gmail.com',
             'code' => '1234',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(200)
@@ -161,7 +161,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'inactive@gmail.com',
             'code' => '9999',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(400)
@@ -190,7 +190,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'active@gmail.com',
             'code' => '1234',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(400)
