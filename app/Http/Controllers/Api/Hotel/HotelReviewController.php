@@ -48,7 +48,7 @@ class HotelReviewController extends BaseApiController
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('reviews', 'public');
+                $imagePath = $request->file('image')->store('reviews', 'public');
         }
 
         $review = Review::create([

@@ -30,10 +30,11 @@ class FlightRepository extends BaseRepository implements FlightRepositoryInterfa
     ): LengthAwarePaginator {
         $query = $this->model
             ->with(['airline', 'originAirport', 'destinationAirport', 'aircraft'])
-            ->whereHas('originAirport', fn($q) => $q->where('code', strtoupper($origin)))
-            ->whereHas('destinationAirport', fn($q) => $q->where('code', strtoupper($destination)))
-            ->whereDate('departure_time', $date)
-            ->where('is_active', true);
+            // ->whereHas('originAirport', fn($q) => $q->where('code', strtoupper($origin)))
+            // ->whereHas('destinationAirport', fn($q) => $q->where('code', strtoupper($destination)))
+            // ->whereDate('departure_time', $date)
+            // ->where('is_active', true)
+            ;
 
         // Apply filters
         if (isset($filters['stops'])) {

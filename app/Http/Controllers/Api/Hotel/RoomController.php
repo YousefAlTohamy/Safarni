@@ -46,7 +46,7 @@ class RoomController extends Controller
             // Assuming main_image is just a filename, prepend storage URL if needed
             // Or if it's a full URL, leave it. 
             // Based on previous code, we might need to prepend 'storage/'
-            $room->main_image = $room->main_image ? url('storage/' . $room->main_image) : null;
+            $room->main_image = $room->main_image ? asset('images/' . $room->main_image) : null;
             return $room;
         });
 
@@ -63,7 +63,7 @@ class RoomController extends Controller
         }
 
         // Format room image
-        $room->main_image = $room->main_image ? url('storage/' . $room->main_image) : null;
+        $room->main_image = $room->main_image ? asset('images/' . $room->main_image) : null;
 
         // Process Hotel Reviews stats
         $hotel = $room->hotel;
@@ -77,7 +77,7 @@ class RoomController extends Controller
         $gallery = $hotel->images->map(function ($img) {
             return [
                 'id' => $img->id,
-                'url' => url('storage/' . $img->image_path),
+                'url' => asset('images/' . $img->image_path),
                 'user_id' => $img->user_id,
             ];
         });
@@ -87,7 +87,7 @@ class RoomController extends Controller
             return [
                 'id' => $review->id,
                 'user_name' => $review->user->name ?? 'Guest',
-                'user_avatar' => $review->user->avatar ? url('storage/' . $review->user->avatar) : null, // Assuming avatar field exists
+                'user_avatar' => $review->user->avatar ? asset('images/' . $review->user->avatar) : null, // Assuming avatar field exists
                 'rating' => $review->rating,
                 'comment' => $review->comment,
                 'created_at' => $review->created_at->diffForHumans(),

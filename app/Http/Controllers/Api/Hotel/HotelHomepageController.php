@@ -25,7 +25,7 @@ class HotelHomepageController extends Controller
 
         // Map images to full URLs
         $hotels->transform(function ($hotel) {
-            $hotel->main_image = $hotel->main_image ? url('storage/' . $hotel->main_image) : null;
+            $hotel->main_image = $hotel->main_image ? asset('images/' . $hotel->main_image) : null;
             return $hotel;
         });
 
@@ -57,12 +57,12 @@ class HotelHomepageController extends Controller
         } else {
             // Fallback: Random hotels
             $hotels = Hotel::inRandomOrder()
-                ->take(5)
+                ->take(10)
                 ->get();
         }
 
         $hotels->transform(function ($hotel) {
-            $hotel->main_image = $hotel->main_image ? url('storage/' . $hotel->main_image) : null;
+            $hotel->main_image = $hotel->main_image ? asset('images/' . $hotel->main_image) : null;
             // Add distance to response if available
             if (isset($hotel->distance)) {
                 $hotel->distance = round($hotel->distance, 1) . ' km';
@@ -105,7 +105,7 @@ class HotelHomepageController extends Controller
         $hotels = $query->get();
 
         $hotels->transform(function ($hotel) {
-            $hotel->main_image = $hotel->main_image ? url('storage/' . $hotel->main_image) : null;
+            $hotel->main_image = $hotel->main_image ? asset('images/' . $hotel->main_image) : null;
             return $hotel;
         });
 

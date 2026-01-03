@@ -25,7 +25,7 @@ class CheckoutBookingRequest extends FormRequest
     {
         return [
             'booking_token' => ['required', 'string', 'size:64'],
-            'payment_method_id' => ['required', 'string', 'max:255'],
+            // 'payment_method_id' => ['required', 'string', 'max:255'],
         ];
     }
 

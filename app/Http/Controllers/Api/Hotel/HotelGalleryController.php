@@ -24,7 +24,7 @@ class HotelGalleryController extends BaseApiController
         $images = $hotel->images()->with('user')->latest()->get()->map(function ($img) {
             return [
                 'id' => $img->id,
-                'url' => url('storage/' . $img->image_path),
+                'url' => asset('images/' . $img->image_path),
                 'user' => $img->user ? $img->user->name : null,
                 'created_at' => $img->created_at,
             ];
@@ -65,7 +65,7 @@ class HotelGalleryController extends BaseApiController
 
                 $uploadedImages[] = [
                     'id' => $image->id,
-                    'url' => url('storage/' . $path),
+                    'url' => asset('images/' . $path),
                 ];
             }
         }
