@@ -103,9 +103,11 @@ class AuthService
             ];
         }
 
-        $otpType = $type ? OtpType::tryFrom($type) : OtpType::VERIFICATION;
-        if (! $otpType) {
-            $otpType = OtpType::VERIFICATION;
+        if ($type) {
+            $otpType = OtpType::tryFrom($type) ?? OtpType::VERIFICATION;
+        } else {
+            // Infer type based on user status
+            $otpType = $user->status === 'inactive' ? OtpType::REACTIVATION : OtpType::VERIFICATION;
         }
 
         // Handle Reactivation

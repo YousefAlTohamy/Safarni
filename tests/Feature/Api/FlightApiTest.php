@@ -3,9 +3,9 @@
 namespace Tests\Feature\Api;
 
 use App\Enums\UserRole;
-use App\Models\Airport;
-use App\Models\Airline;
 use App\Models\Aircraft;
+use App\Models\Airline;
+use App\Models\Airport;
 use App\Models\Flight;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,10 +18,15 @@ class FlightApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $user;
+
     protected Airport $originAirport;
+
     protected Airport $destinationAirport;
+
     protected Airline $airline;
+
     protected Aircraft $aircraft;
 
     protected function setUp(): void
@@ -63,7 +68,7 @@ class FlightApiTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->getJson('/api/flights?' . http_build_query([
+        $response = $this->getJson('/api/flights?'.http_build_query([
             'origin' => 'CAI',
             'destination' => 'DXB',
             'date' => now()->addDay()->format('Y-m-d'),
@@ -95,7 +100,7 @@ class FlightApiTest extends TestCase
 
     public function test_search_validates_airport_codes(): void
     {
-        $response = $this->getJson('/api/flights?' . http_build_query([
+        $response = $this->getJson('/api/flights?'.http_build_query([
             'origin' => 'INVALID',
             'destination' => 'X',
             'date' => now()->addDay()->format('Y-m-d'),
@@ -107,7 +112,7 @@ class FlightApiTest extends TestCase
 
     public function test_search_validates_date_not_in_past(): void
     {
-        $response = $this->getJson('/api/flights?' . http_build_query([
+        $response = $this->getJson('/api/flights?'.http_build_query([
             'origin' => 'CAI',
             'destination' => 'DXB',
             'date' => now()->subDay()->format('Y-m-d'),
@@ -122,7 +127,7 @@ class FlightApiTest extends TestCase
         $this->createFlight(['stops' => 0, 'departure_time' => now()->addDay()]);
         $this->createFlight(['stops' => 1, 'departure_time' => now()->addDay()]);
 
-        $response = $this->getJson('/api/flights?' . http_build_query([
+        $response = $this->getJson('/api/flights?'.http_build_query([
             'origin' => 'CAI',
             'destination' => 'DXB',
             'date' => now()->addDay()->format('Y-m-d'),
@@ -146,7 +151,7 @@ class FlightApiTest extends TestCase
             'departure_time' => now()->addDay(),
         ]);
 
-        $response = $this->getJson('/api/flights?' . http_build_query([
+        $response = $this->getJson('/api/flights?'.http_build_query([
             'origin' => 'CAI',
             'destination' => 'DXB',
             'date' => now()->addDay()->format('Y-m-d'),
@@ -182,7 +187,7 @@ class FlightApiTest extends TestCase
 
     public function test_returns_404_for_invalid_flight(): void
     {
-        $response = $this->getJson('/api/flights/' . Str::uuid());
+        $response = $this->getJson('/api/flights/'.Str::uuid());
 
         $response->assertStatus(404);
     }
@@ -199,7 +204,7 @@ class FlightApiTest extends TestCase
         $flight2 = $this->createFlight();
 
         // Use proper array syntax for query string
-        $response = $this->getJson('/api/flights/compare?flight_ids[]=' . $flight1->id . '&flight_ids[]=' . $flight2->id);
+        $response = $this->getJson('/api/flights/compare?flight_ids[]='.$flight1->id.'&flight_ids[]='.$flight2->id);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -225,7 +230,7 @@ class FlightApiTest extends TestCase
     {
         $flight = $this->createFlight();
 
-        $response = $this->getJson('/api/flights/compare?flight_ids[]=' . $flight->id);
+        $response = $this->getJson('/api/flights/compare?flight_ids[]='.$flight->id);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['flight_ids']);
@@ -238,8 +243,8 @@ class FlightApiTest extends TestCase
             $flights->push($this->createFlight());
         }
 
-        $queryString = $flights->map(fn ($f) => 'flight_ids[]=' . $f->id)->implode('&');
-        $response = $this->getJson('/api/flights/compare?' . $queryString);
+        $queryString = $flights->map(fn ($f) => 'flight_ids[]='.$f->id)->implode('&');
+        $response = $this->getJson('/api/flights/compare?'.$queryString);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['flight_ids']);

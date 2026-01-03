@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -478,6 +479,47 @@ class AuthApiTest extends TestCase
         // Verify can login with new password
         $user->refresh();
         $this->assertTrue(Hash::check('NewPassword1!', $user->password));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google OAuth Tests
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_google_callback_exchanges_code_for_token(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response([
+                'access_token' => 'fake_access_token',
+                'expires_in' => 3600,
+            ], 200),
+            'www.googleapis.com/oauth2/v2/userinfo' => Http::response([
+                'id' => '123456789',
+                'email' => 'google@gmail.com',
+                'name' => 'Google User',
+                'picture' => 'https://example.com/avatar.jpg',
+            ], 200),
+        ]);
+
+        $response = $this->getJson('/api/auth/google/callback?code=valid_code');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login successful.',
+            ])
+            ->assertJsonStructure([
+                'data' => [
+                    'token',
+                    'user' => ['id', 'email', 'name'],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'google@gmail.com',
+            'google_id' => '123456789',
+        ]);
     }
 
     /*

@@ -261,4 +261,33 @@ class AccountLifecycleTest extends TestCase
 
         $this->assertSoftDeleted('users', ['id' => $user->id]);
     }
+
+    public function test_reactivation_works_without_explicit_type(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'inactive_no_type@gmail.com',
+            'status' => 'inactive',
+        ]);
+
+        Otp::create([
+            'email' => 'inactive_no_type@gmail.com',
+            'code' => '5678',
+            'type' => OtpType::REACTIVATION->value,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Request without 'type'
+        $response = $this->postJson('/api/auth/verify', [
+            'email' => 'inactive_no_type@gmail.com',
+            'code' => '5678',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Account reactivated successfully. You can now login.',
+            ]);
+
+        $this->assertEquals('active', $user->fresh()->status);
+    }
 }
