@@ -1,18 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\AirportController;
-use App\Http\Controllers\Api\AirlineController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\FlightController;
-use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\SeatController;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\PassengerController;
-use App\Http\Controllers\Api\Hotel\HotelHomepageController;
-use App\Http\Controllers\Api\Hotel\RoomController;
-use App\Http\Controllers\Api\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\SeatController;
+use App\Http\Controllers\Api\TourController;
+use App\Http\Controllers\Api\FlightController;
+use App\Http\Controllers\Api\AirlineController;
+use App\Http\Controllers\Api\AirportController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\PassengerController;
+use App\Http\Controllers\Api\Hotel\RoomController;
+use App\Http\Controllers\Api\Hotel\HotelHomepageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -188,6 +189,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{hotel}/gallery', [App\Http\Controllers\Api\Hotel\HotelGalleryController::class, 'store']);
     });
 
+   
 
 
+
+});
+Route::prefix('tours')->group(function () {
+    Route::get('/', [TourController::class, 'index']);
+    Route::get('/recommendations', [TourController::class, 'recommendations']);
+    Route::get('/{tour}', [TourController::class, 'show']);
+    Route::get('/availability-tours', [TourController::class, 'availability']);
+    Route::get('destinations', [TourController::class, 'destination']);
+    Route::get('/tours-in-in-destination', [TourController::class, 'toursInDestination']);
 });
