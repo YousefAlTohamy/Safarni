@@ -49,13 +49,17 @@ class TourController extends Controller
     }
     public function destination(Request $request): JsonResponse
     {
-        $destinations = Tour::select('location')->distinct()->get();
-        if ($request->has('search')) {
-            $destinations = $destinations->where('location', 'like', '%' . $request->search . '%');
-        } else {
-            $destinations = $destinations->take(10);
+        $query = Tour::select('location')->distinct();
+
+        if ($request->filled('search')) {
+            $query->where('location', 'like', '%' . $request->search . '%');
         }
-        return $this->successResponse($destinations);
+
+        $destinations = $query->limit(10)->pluck('location');
+
+        return $this->successResponse([
+            $destinations,
+        ]);
     }
     public function toursInDestination(Request $request): JsonResponse
     {
