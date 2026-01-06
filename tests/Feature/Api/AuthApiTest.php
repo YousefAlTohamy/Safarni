@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -482,6 +483,86 @@ class AuthApiTest extends TestCase
 
     /*
     |--------------------------------------------------------------------------
+    | Google OAuth Tests
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_google_callback_exchanges_code_for_token(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response([
+                'access_token' => 'fake_access_token',
+                'expires_in' => 3600,
+            ], 200),
+            'www.googleapis.com/oauth2/v2/userinfo' => Http::response([
+                'id' => '123456789',
+                'email' => 'google@gmail.com',
+                'name' => 'Google User',
+                'picture' => 'https://example.com/avatar.jpg',
+            ], 200),
+        ]);
+
+        $response = $this->getJson('/api/auth/google/callback?code=valid_code');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login successful.',
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'google@gmail.com',
+            'google_id' => '123456789',
+        ]);
+    }
+
+    public function test_google_redirect_uses_dynamic_uri(): void
+    {
+        $customRedirect = 'https://myapp.com/callback';
+        $response = $this->getJson("/api/auth/google?redirect_uri={$customRedirect}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $url = $response->json('url');
+        $this->assertStringContainsString('redirect_uri=' . urlencode($customRedirect), $url);
+    }
+
+    public function test_google_callback_uses_dynamic_uri(): void
+    {
+        $customRedirect = 'https://myapp.com/callback';
+
+        Http::fake([
+            'oauth2.googleapis.com/token' => function ($request) use ($customRedirect) {
+                return $request['redirect_uri'] === $customRedirect &&
+                       $request['code'] === 'valid_code'
+                    ? Http::response(['access_token' => 'fake_token'], 200)
+                    : Http::response(['error' => 'invalid_request'], 400);
+            },
+            'www.googleapis.com/oauth2/v2/userinfo' => Http::response([
+                'id' => '987654321',
+                'email' => 'dynamic@gmail.com',
+                'name' => 'Dynamic User',
+            ], 200),
+        ]);
+
+        $response = $this->getJson("/api/auth/google/callback?code=valid_code&redirect_uri={$customRedirect}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'dynamic@gmail.com',
+            'google_id' => '987654321',
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Profile Tests
     |--------------------------------------------------------------------------
     */
@@ -737,13 +818,16 @@ class AuthApiTest extends TestCase
     public function test_user_can_delete_account(): void
     {
         $user = User::factory()->create([
+            'password' => Hash::make('password'),
             'is_verified' => true,
             'role' => UserRole::USER->value,
         ]);
 
         Sanctum::actingAs($user);
 
-        $response = $this->deleteJson('/api/profile');
+        $response = $this->deleteJson('/api/profile', [
+            'password' => 'password',
+        ]);
 
         $response->assertStatus(200)
             ->assertJson([

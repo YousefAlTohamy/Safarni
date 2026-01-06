@@ -10,6 +10,7 @@ use App\Interfaces\Repositories\BookingRepositoryInterface;
 use App\Interfaces\Repositories\FlightRepositoryInterface;
 use App\Interfaces\Repositories\SeatRepositoryInterface;
 use App\Models\BookingDetail;
+use App\Models\Passenger;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -144,6 +145,21 @@ class BookingService
                         'pricing' => $summary['pricing'],
                     ],
                 ]);
+
+                // Create passengers for the booking
+                foreach ($summary['passengers'] as $passengerData) {
+                    Passenger::create([
+                        'booking_id' => $booking->id,
+                        'title' => $passengerData['title'],
+                        'first_name' => $passengerData['first_name'],
+                        'last_name' => $passengerData['last_name'],
+                        'date_of_birth' => $passengerData['date_of_birth'],
+                        'passport_number' => $passengerData['passport_number'],
+                        'passport_expiry' => $passengerData['passport_expiry'],
+                        'nationality' => $passengerData['nationality'] ?? null,
+                        'special_requests' => $passengerData['special_requests'] ?? null,
+                    ]);
+                }
 
                 // Book seats - Cast UUID to string
                 foreach ($summary['seat_ids'] as $seatId) {

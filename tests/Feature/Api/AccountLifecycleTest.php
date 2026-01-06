@@ -100,7 +100,7 @@ class AccountLifecycleTest extends TestCase
 
         $response = $this->postJson('/api/auth/resend-otp', [
             'email' => 'inactive@gmail.com',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(200)
@@ -132,7 +132,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'inactive@gmail.com',
             'code' => '1234',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(200)
@@ -161,7 +161,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'inactive@gmail.com',
             'code' => '9999',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(400)
@@ -171,6 +171,7 @@ class AccountLifecycleTest extends TestCase
 
         $this->assertEquals('inactive', $user->fresh()->status);
     }
+
 
     public function test_active_user_cannot_use_reactivation_otp(): void
     {
@@ -189,7 +190,7 @@ class AccountLifecycleTest extends TestCase
         $response = $this->postJson('/api/auth/verify', [
             'email' => 'active@gmail.com',
             'code' => '1234',
-            'type' => 'reactive',
+            'type' => 'reactivation',
         ]);
 
         $response->assertStatus(400)
@@ -197,5 +198,96 @@ class AccountLifecycleTest extends TestCase
                 'success' => false,
                 'message' => 'Account is already active.',
             ]);
+    }
+
+    public function test_user_cannot_delete_account_without_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('password'),
+            'is_verified' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson('/api/profile');
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_user_cannot_delete_account_with_wrong_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('password'),
+            'is_verified' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson('/api/profile', [
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Incorrect password.',
+            ]);
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'deleted_at' => null]);
+    }
+
+    public function test_user_can_delete_account_with_correct_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('password'),
+            'is_verified' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson('/api/profile', [
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Account deleted successfully.',
+            ]);
+
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+    }
+
+    public function test_reactivation_works_without_explicit_type(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'inactive_no_type@gmail.com',
+            'status' => 'inactive',
+        ]);
+
+        Otp::create([
+            'email' => 'inactive_no_type@gmail.com',
+            'code' => '5678',
+            'type' => OtpType::REACTIVATION->value,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Request without 'type'
+        $response = $this->postJson('/api/auth/verify', [
+            'email' => 'inactive_no_type@gmail.com',
+            'code' => '5678',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Account reactivated successfully. You can now login.',
+            ]);
+
+        $this->assertEquals('active', $user->fresh()->status);
     }
 }

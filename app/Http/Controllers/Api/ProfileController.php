@@ -126,7 +126,21 @@ class ProfileController extends BaseApiController
      */
     public function delete(Request $request): JsonResponse
     {
-        $result = $this->profileService->deleteAccount($request->user());
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        $result = $this->profileService->deleteAccount(
+            $request->user(),
+            $request->input('password')
+        );
+
+        if (!$result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+            ], 400);
+        }
 
         return response()->json([
             'success' => true,
