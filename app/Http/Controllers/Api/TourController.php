@@ -47,7 +47,7 @@ class TourController extends Controller
             'data' => TourResource::collection($tours),
         ]);
     }
-    public function destinations(Request $request): JsonResponse
+    public function destination(Request $request): JsonResponse
     {
         $destinations = Tour::select('location')->distinct()->get();
         if ($request->has('search')) {
