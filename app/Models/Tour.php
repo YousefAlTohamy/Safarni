@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Tour model representing bookable tour packages.
@@ -74,6 +75,24 @@ class Tour extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get bookings for this tour.
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'item_id')
+            ->where('bookings.category', 'tours');
+    }
+
+    /**
+     * Get reviews for this tour.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'item_id')
+            ->where('reviews.category', 'tours');
     }
 
     /**

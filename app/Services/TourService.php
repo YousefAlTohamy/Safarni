@@ -16,6 +16,18 @@ class TourService
     {
         return $this->tourRepository->all();
     }
+
+    /**
+     * Get tours with filters and sorting.
+     *
+     * @param array<string, mixed> $filters
+     * @param string|null $sortBy
+     * @return Collection
+     */
+    public function getToursWithFilters(array $filters = [], ?string $sortBy = null): Collection
+    {
+        return $this->tourRepository->getToursWithFilters($filters, $sortBy);
+    }
     public function getTourById(int $id): ?object
     {
         return $this->tourRepository->find($id);

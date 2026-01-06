@@ -26,4 +26,13 @@ interface TourRepositoryInterface extends BaseRepositoryInterface
      * Find tour by slug.
      */
     public function findBySlug(string $slug): ?Tour;
+
+    /**
+     * Get tours with filtering and sorting.
+     *
+     * @param array<string, mixed> $filters
+     * @param string|null $sortBy
+     * @return Collection
+     */
+    public function getToursWithFilters(array $filters = [], ?string $sortBy = null): Collection;
 }
