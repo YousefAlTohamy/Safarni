@@ -198,7 +198,7 @@ Route::prefix('tours')->group(function () {
     Route::get('/', [TourController::class, 'index']);
     Route::get('/recommendations', [TourController::class, 'recommendations']);
     Route::get('/{tour}', [TourController::class, 'show']);
-    Route::get('/availability-tours', [TourController::class, 'availability']);
+    Route::get('/availability-tours', [TourController::class, 'index']);
     Route::get('destinations', [TourController::class, 'destination']);
     Route::get('/tours-in-in-destination', [TourController::class, 'toursInDestination']);
 });
