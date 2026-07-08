@@ -308,7 +308,7 @@ php artisan test --filter=Seat
 
 ## Project Scope Note
 
-Safarni includes completed authentication, flight-search, seat, booking, passenger, hotel-discovery, tour-discovery, and admin-management APIs. Payment-gateway integration and some booking categories remain planned work, so this repository does not present them as finished production features.
+Safarni includes completed authentication, flight-search, seat, booking, passenger, hotel-discovery, tour-discovery, and admin-management APIs. Payment-gateway integration and some booking categories remain planned work, so this repository does not present them as finished production features
 
 ---
 
